@@ -1,0 +1,8 @@
+# Godot-generated editor and import cache
+.godot/
+
+# Local editor configuration
+.vscode/
+
+# macOS metadata
+.DS_Store
