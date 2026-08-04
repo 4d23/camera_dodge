@@ -14,8 +14,6 @@ func _physics_process(delta: float) -> void:
 		direction = wasd.normalized()
 	velocity = direction * speed
 	move_and_slide()
-	position.x = clampf(position.x, 55.0, 1097.0)
-	position.y = clampf(position.y, 105.0, 590.0)
 	if invulnerable:
 		invulnerability_timer -= delta
 		if invulnerability_timer <= 0.0:

@@ -8,6 +8,7 @@ enum CameraState { WANDER, AIM, FLASH, COOLDOWN }
 var player: CharacterBody2D
 var attractions: PackedVector2Array
 var bounds := Rect2(55, 105, 1042, 485)
+var walls: Array
 var velocity := Vector2.ZERO
 var state := CameraState.WANDER
 var timer := 0.0
@@ -17,9 +18,11 @@ var body_color := Color("#5b6ee1")
 var view_radius := 150.0	# n pixel forward
 var fov_degrees := 60.0		# degree
 
-func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, seed_value: int) -> void:
+func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, seed_value: int, movement_bounds := Rect2(55, 105, 1042, 485), blocking_walls: Array = []) -> void:
 	player = target
 	attractions = attraction_positions
+	bounds = movement_bounds
+	walls = blocking_walls
 	rng.seed = seed_value
 	body_color = [Color("#5b6ee1"), Color("#e07a5f"), Color("#7f5af0"), Color("#2a9d8f")][seed_value % 4]
 	_choose_velocity()
@@ -32,7 +35,11 @@ func _physics_process(delta: float) -> void:
 	timer -= delta
 	match state:
 		CameraState.WANDER:
-			position += velocity * delta
+			var next_position := position + velocity * delta
+			if _inside_wall(next_position):
+				velocity *= -1.0
+			else:
+				position = next_position
 			_bounce_inside_bounds()
 			if timer <= 0.0:
 				state = CameraState.AIM
@@ -68,6 +75,12 @@ func _closest_attraction() -> Vector2:
 			closest_distance = distance
 	return closest
 
+func _inside_wall(point: Vector2) -> bool:
+	for wall in walls:
+		if wall.grow(18.0).has_point(point):
+			return true
+	return false
+
 func _bounce_inside_bounds() -> void:
 	if position.x < bounds.position.x or position.x > bounds.end.x:
 		velocity.x *= -1.0
@@ -80,7 +93,13 @@ func _player_is_in_frame() -> bool:
 	var relative := (player.global_position - global_position).rotated(-aim_angle)
 	var half_fov := deg_to_rad(fov_degrees * 0.5)
 	var angle_to_player := absf(relative.angle())
-	return relative.length() > 18.0 and relative.length() < view_radius and angle_to_player < half_fov
+	return relative.length() > 18.0 and relative.length() < view_radius and angle_to_player < half_fov and not _view_blocked()
+
+func _view_blocked() -> bool:
+	for step in range(1, 12):
+		if _inside_wall(global_position.lerp(player.global_position, step / 12.0)):
+			return true
+	return false
 
 func _draw() -> void:
 	if state == CameraState.AIM or state == CameraState.FLASH:
