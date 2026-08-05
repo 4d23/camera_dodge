@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://cll0xg83qyvf8" path="res://assets/artworks/dying_slave.jpg" id="6"]
 [ext_resource type="Texture2D" uid="uid://d0s5a8jls01nw" path="res://assets/artworks/venus_de_milo.jpg" id="7"]
 [ext_resource type="Script" uid="uid://dhsxyl2l11jdj" path="res://scripts/location_marker.gd" id="8"]
-[ext_resource type="Texture2D" uid="uid://q2tv6qxl3k6d" path="res://assets/artworks/great_sphinx_of_tanis.jpg" id="8_tfamw"]
+[ext_resource type="Texture2D" path="res://assets/artworks/great_sphinx_of_tanis.jpg" id="8_tfamw"]
 
 [node name="Level0" type="Node2D" unique_id=235238859]
 script = ExtResource("1")

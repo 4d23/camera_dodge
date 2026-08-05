@@ -8,7 +8,6 @@ extends Node2D
 	set(value): room_name = value; queue_redraw()
 @export var artwork_texture: Texture2D:
 	set(value): artwork_texture = value; queue_redraw()
-@export var visit_radius := 55.0
 var visited := false
 
 func _ready() -> void:
@@ -29,4 +28,3 @@ func _draw() -> void:
 	if visited:
 		draw_circle(Vector2.ZERO, 65.0, Color(0.25, 0.85, 0.5, 0.24))
 		draw_string(ThemeDB.fallback_font, Vector2(-9, 8), "✓", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("#174b32"))
-

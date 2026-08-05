@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
-var speed := 205.0
+var speed: float
+var invulnerability_duration: float
 var invulnerable := false
 var invulnerability_timer := 0.0
 
@@ -22,8 +23,12 @@ func _physics_process(delta: float) -> void:
 
 func hit() -> void:
 	invulnerable = true
-	invulnerability_timer = 1.0
+	invulnerability_timer = invulnerability_duration
 	queue_redraw()
+
+func configure(params: Dictionary) -> void:
+	speed = float(params.speed)
+	invulnerability_duration = float(params.invulnerability_duration)
 
 func _draw() -> void:
 	if invulnerable and int(invulnerability_timer * 12.0) % 2 == 0:

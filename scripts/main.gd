@@ -7,12 +7,16 @@ var start_position := Vector2.ZERO
 var exit_position := Vector2.ZERO
 var stairs_position := Vector2.ZERO
 var attractions: Array[Dictionary] = []
+var game_params: Dictionary = {}
 
-@export var crowd_count := 18
-@export_range(1.0, 5.0, 0.1) var goal_density_bias := 2.0
-@export var minimum_crowd_spacing := 55.0
-@export var start_exclusion_radius := 125.0
-@export var attraction_exclusion_radius := 90.0
+var crowd_count: int
+var goal_density_bias: float
+var minimum_crowd_spacing: float
+var start_exclusion_radius: float
+var attraction_exclusion_radius: float
+var exit_exclusion_radius: float
+var artwork_view_duration: float
+var artwork_visit_radius: float
 
 var player: CharacterBody2D
 var exposures := 0
@@ -22,6 +26,7 @@ var status_label: Label
 var exposure_label: Label
 var flash_overlay: ColorRect
 var visited_attractions: Array[bool] = []
+var artwork_view_progress: Array[float] = []
 var ui_layer: CanvasLayer
 var art_label: Label
 var floor_label: Label
@@ -30,13 +35,53 @@ var stair_cooldown := 0.0
 var crowd_nodes: Array[Node] = []
 
 func _ready() -> void:
+	if not _load_game_params():
+		return
 	_load_scene_layout()
 	visited_attractions.resize(attractions.size())
 	visited_attractions.fill(false)
+	artwork_view_progress.resize(attractions.size())
+	artwork_view_progress.fill(0.0)
 	_build_player()
 	_build_ui()
 	_spawn_crowd()
 	queue_redraw()
+
+func _load_game_params() -> bool:
+	var file := FileAccess.open("res://config/game_params.json", FileAccess.READ)
+	if file == null:
+		push_error("Unable to open res://config/game_params.json")
+		return false
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		push_error("game_params.json must contain a JSON object")
+		return false
+	game_params = parsed
+	var required := {
+		"player": ["speed", "invulnerability_duration"],
+		"artwork": ["view_duration", "visit_radius"],
+		"crowd": ["count", "goal_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius"],
+		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "initial_wander_min", "initial_wander_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max", "wander_min", "wander_max"]
+	}
+	for section_name: String in required:
+		if not game_params.has(section_name) or not game_params[section_name] is Dictionary:
+			push_error("game_params.json is missing section: %s" % section_name)
+			return false
+		for key: String in required[section_name]:
+			if not game_params[section_name].has(key):
+				push_error("game_params.json is missing: %s.%s" % [section_name, key])
+				return false
+	var artwork: Dictionary = game_params.artwork
+	var crowd: Dictionary = game_params.crowd
+	artwork_view_duration = float(artwork.view_duration)
+	artwork_visit_radius = float(artwork.visit_radius)
+	crowd_count = int(crowd.count)
+	goal_density_bias = float(crowd.goal_density_bias)
+	minimum_crowd_spacing = float(crowd.minimum_spacing)
+	start_exclusion_radius = float(crowd.start_exclusion_radius)
+	attraction_exclusion_radius = float(crowd.artwork_exclusion_radius)
+	exit_exclusion_radius = float(crowd.exit_exclusion_radius)
+	return true
 
 func _load_scene_layout() -> void:
 	start_position = $Level0/Markers/Entrance.global_position
@@ -54,6 +99,7 @@ func _build_player() -> void:
 	player.position = start_position
 	player.z_index = 6
 	player.set_script(load("res://scripts/player.gd"))
+	player.configure(game_params.get("player", {}))
 	add_child(player)
 	var collision := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
@@ -120,7 +166,7 @@ func _spawn_crowd() -> void:
 		var tourist := Tourist.new()
 		crowd_nodes.append(tourist)
 		tourist.position = spawn_position
-		tourist.setup(player, attraction_positions, rng.randi(), Rect2(80,110,2240,1580), _current_level().wall_rects())
+		tourist.setup(player, attraction_positions, rng.randi(), Rect2(80,110,2240,1580), _current_level().wall_rects(), game_params.get("tourist", {}))
 		tourist.photographed.connect(_on_photographed)
 		add_child(tourist)
 
@@ -139,7 +185,7 @@ func _sample_crowd_position(rng: RandomNumberGenerator, existing_positions: Arra
 		# Entrance and destination are hard no-spawn zones.
 		if candidate.distance_to(start_position) < start_exclusion_radius:
 			continue
-		if candidate.distance_to(exit_position) < 135.0 or _inside_wall(candidate):
+		if candidate.distance_to(exit_position) < exit_exclusion_radius or _inside_wall(candidate):
 			continue
 		var inside_attraction := false
 		for destination in attractions:
@@ -172,12 +218,21 @@ func _process(delta: float) -> void:
 	if game_over:
 		return
 	for index in attractions.size():
-		if attractions[index].floor == current_floor and not visited_attractions[index] and player.position.distance_to(attractions[index].position) < attractions[index].node.visit_radius:
-			visited_attractions[index] = true
-			attractions[index].node.set_visited(true)
-			status_label.text = "%s visited!" % attractions[index].name
-			_update_art_text()
-			queue_redraw()
+		if visited_attractions[index]:
+			continue
+		var is_viewing: bool = attractions[index].floor == current_floor and player.position.distance_to(attractions[index].position) < artwork_visit_radius
+		if is_viewing:
+			artwork_view_progress[index] += delta
+			var remaining := maxf(artwork_view_duration - artwork_view_progress[index], 0.0)
+			status_label.text = "Viewing %s… %.1fs" % [attractions[index].name, remaining]
+			if artwork_view_progress[index] >= artwork_view_duration:
+				visited_attractions[index] = true
+				attractions[index].node.set_visited(true)
+				status_label.text = "%s visited!" % attractions[index].name
+				_update_art_text()
+				queue_redraw()
+		else:
+			artwork_view_progress[index] = 0.0
 	if player.position.distance_to(stairs_position) < 55.0 and stair_cooldown <= 0.0:
 		_switch_floor()
 	if current_floor == 0 and player.position.distance_to(exit_position) < 60.0:

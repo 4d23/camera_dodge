@@ -15,18 +15,22 @@ var timer := 0.0
 var aim_angle := 0.0
 var rng := RandomNumberGenerator.new()
 var body_color := Color("#5b6ee1")
-var view_radius := 200.0	# n pixel forward
-var fov_degrees := 100.0		# degree
+var view_radius: float
+var fov_degrees: float
+var params: Dictionary = {}
 
-func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, seed_value: int, movement_bounds := Rect2(55, 105, 1042, 485), blocking_walls: Array = []) -> void:
+func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, seed_value: int, movement_bounds := Rect2(55, 105, 1042, 485), blocking_walls: Array = [], tourist_params: Dictionary = {}) -> void:
 	player = target
 	attractions = attraction_positions
 	bounds = movement_bounds
 	walls = blocking_walls
+	params = tourist_params
+	view_radius = float(params.view_radius)
+	fov_degrees = float(params.fov_degrees)
 	rng.seed = seed_value
 	body_color = [Color("#5b6ee1"), Color("#e07a5f"), Color("#7f5af0"), Color("#2a9d8f")][seed_value % 4]
 	_choose_velocity()
-	timer = rng.randf_range(1.0, 3.2)
+	timer = rng.randf_range(_param("initial_wander_min"), _param("initial_wander_max"))
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
@@ -44,26 +48,29 @@ func _physics_process(delta: float) -> void:
 			if timer <= 0.0:
 				state = CameraState.AIM
 				aim_angle = global_position.angle_to_point(_closest_attraction())
-				timer = 1.25
+				timer = _param("aim_duration")
 		CameraState.AIM:
 			if timer <= 0.0:
 				state = CameraState.FLASH
-				timer = 0.16
+				timer = _param("flash_duration")
 				if _player_is_in_frame():
 					photographed.emit()
 		CameraState.FLASH:
 			if timer <= 0.0:
 				state = CameraState.COOLDOWN
-				timer = rng.randf_range(1.4, 2.5)
+				timer = rng.randf_range(_param("cooldown_min"), _param("cooldown_max"))
 		CameraState.COOLDOWN:
 			if timer <= 0.0:
 				state = CameraState.WANDER
 				_choose_velocity()
-				timer = rng.randf_range(1.2, 3.5)
+				timer = rng.randf_range(_param("wander_min"), _param("wander_max"))
 	queue_redraw()
 
 func _choose_velocity() -> void:
-	velocity = Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(28.0, 52.0)
+	velocity = Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(_param("speed_min"), _param("speed_max"))
+
+func _param(key: String) -> float:
+	return float(params[key])
 
 func _closest_attraction() -> Vector2:
 	var closest := attractions[0]
@@ -119,4 +126,4 @@ func _draw() -> void:
 	var camera_direction := Vector2.from_angle(aim_angle if state != CameraState.WANDER else velocity.angle())
 	draw_line(camera_direction * 7.0, camera_direction * 21.0, Color("#222536"), 7.0)
 	if state == CameraState.AIM:
-		draw_arc(Vector2.ZERO, 23.0, -PI / 2.0, -PI / 2.0 + TAU * (timer / 1.25), 24, Color.WHITE, 3.0)
+		draw_arc(Vector2.ZERO, 23.0, -PI / 2.0, -PI / 2.0 + TAU * (timer / _param("aim_duration")), 24, Color.WHITE, 3.0)

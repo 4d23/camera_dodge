@@ -21,7 +21,9 @@ Open either floor scene directly in the Godot editor:
 
 Under `Walls`, select and drag a wall in the 2D viewport. Change its `Wall Size` in the Inspector to resize it.
 
-Under `Artworks`, select and drag an artwork. Its name, room, texture, and visit radius are editable in the Inspector. Duplicate an artwork node to add another featured room, then assign a different texture and metadata.
+Under `Artworks`, select and drag an artwork. Its name, room, and texture are editable in the Inspector. Duplicate an artwork node to add another featured room, then assign a different texture and metadata.
+
+Gameplay tuning values are centralized in `res://config/game_params.json`. Edit this file to change player speed, artwork viewing duration/radius, crowd density and spacing, tourist movement speed, camera radius/FOV, and camera timing.
 
 Under `Markers`, drag the entrance, exit, or stairs. The running game reads these scene positions automatically.
 
