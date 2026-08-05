@@ -15,8 +15,8 @@ var timer := 0.0
 var aim_angle := 0.0
 var rng := RandomNumberGenerator.new()
 var body_color := Color("#5b6ee1")
-var view_radius := 150.0	# n pixel forward
-var fov_degrees := 60.0		# degree
+var view_radius := 200.0	# n pixel forward
+var fov_degrees := 100.0		# degree
 
 func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, seed_value: int, movement_bounds := Rect2(55, 105, 1042, 485), blocking_walls: Array = []) -> void:
 	player = target

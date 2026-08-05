@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://dy2intvjjm6t5"]
+
+[ext_resource type="Script" uid="uid://dcv8daat68cmy" path="res://scripts/museum_level.gd" id="1"]
+[ext_resource type="Script" uid="uid://dv5lf120kppgo" path="res://scripts/museum_wall.gd" id="2"]
+[ext_resource type="Script" uid="uid://e1sbw37h10c5" path="res://scripts/artwork.gd" id="3"]
+[ext_resource type="Texture2D" uid="uid://du2wtmccv7k6f" path="res://assets/artworks/mona_lisa.jpg" id="4"]
+[ext_resource type="Texture2D" uid="uid://byej4bdaa6088" path="res://assets/artworks/liberty_leading_the_people.jpg" id="5"]
+[ext_resource type="Texture2D" uid="uid://cwlc4wpq7ye30" path="res://assets/artworks/winged_victory.jpg" id="6"]
+[ext_resource type="Texture2D" uid="uid://bev7oa58pawt6" path="res://assets/artworks/coronation_of_napoleon.jpg" id="7"]
+[ext_resource type="Texture2D" uid="uid://8dxp88sy1kuj" path="res://assets/artworks/raft_of_the_medusa.jpg" id="8"]
+[ext_resource type="Script" uid="uid://dhsxyl2l11jdj" path="res://scripts/location_marker.gd" id="9"]
+
+[node name="Level1" type="Node2D" unique_id=959045115]
+script = ExtResource("1")
+floor_number = 1
+
+[node name="Walls" type="Node2D" parent="." unique_id=870840697]
+
+[node name="NorthBoundary" type="StaticBody2D" parent="Walls" unique_id=234720358]
+position = Vector2(1200, 95)
+script = ExtResource("2")
+wall_size = Vector2(2300, 30)
+
+[node name="SouthBoundary" type="StaticBody2D" parent="Walls" unique_id=617996786]
+position = Vector2(1200, 1705)
+script = ExtResource("2")
+wall_size = Vector2(2300, 30)
+
+[node name="WestBoundary" type="StaticBody2D" parent="Walls" unique_id=1604992588]
+position = Vector2(65, 900)
+script = ExtResource("2")
+wall_size = Vector2(30, 1640)
+
+[node name="EastBoundary" type="StaticBody2D" parent="Walls" unique_id=537606036]
+position = Vector2(2335, 900)
+script = ExtResource("2")
+wall_size = Vector2(30, 1640)
+
+[node name="GalleryWall01" type="StaticBody2D" parent="Walls" unique_id=790911676]
+position = Vector2(706, 305)
+script = ExtResource("2")
+wall_size = Vector2(32, 390)
+
+[node name="GalleryWall02" type="StaticBody2D" parent="Walls" unique_id=1487477127]
+position = Vector2(706, 875)
+script = ExtResource("2")
+wall_size = Vector2(32, 430)
+
+[node name="GalleryWall03" type="StaticBody2D" parent="Walls" unique_id=1597106331]
+position = Vector2(706, 1475)
+script = ExtResource("2")
+wall_size = Vector2(32, 430)
+
+[node name="GalleryWall04" type="StaticBody2D" parent="Walls" unique_id=2004893599]
+position = Vector2(1476, 370)
+script = ExtResource("2")
+wall_size = Vector2(32, 550)
+
+[node name="GalleryWall05" type="StaticBody2D" parent="Walls" unique_id=156275702]
+position = Vector2(1476, 1100)
+script = ExtResource("2")
+wall_size = Vector2(32, 380)
+
+[node name="GalleryWall06" type="StaticBody2D" parent="Walls" unique_id=1147330621]
+position = Vector2(1476, 1611)
+script = ExtResource("2")
+wall_size = Vector2(32, 180)
+
+[node name="GalleryWall07" type="StaticBody2D" parent="Walls" unique_id=254207317]
+position = Vector2(829, 644)
+script = ExtResource("2")
+wall_size = Vector2(280, 30)
+
+[node name="GalleryWall08" type="StaticBody2D" parent="Walls" unique_id=883400136]
+position = Vector2(1341, 647)
+script = ExtResource("2")
+wall_size = Vector2(300, 30)
+
+[node name="GalleryWall09" type="StaticBody2D" parent="Walls" unique_id=1445345460]
+position = Vector2(205, 1251)
+script = ExtResource("2")
+wall_size = Vector2(250, 30)
+
+[node name="GalleryWall10" type="StaticBody2D" parent="Walls" unique_id=429387706]
+position = Vector2(627, 1249)
+script = ExtResource("2")
+wall_size = Vector2(190, 30)
+
+[node name="GalleryWall11" type="StaticBody2D" parent="Walls" unique_id=822475372]
+position = Vector2(1642, 1275)
+script = ExtResource("2")
+wall_size = Vector2(300, 30)
+
+[node name="GalleryWall12" type="StaticBody2D" parent="Walls" unique_id=261767729]
+position = Vector2(2140, 1275)
+script = ExtResource("2")
+wall_size = Vector2(360, 30)
+
+[node name="Artworks" type="Node2D" parent="." unique_id=1877756427]
+
+[node name="MonaLisa" type="Node2D" parent="Artworks" unique_id=70954221]
+position = Vector2(372, 302)
+scale = Vector2(1.5, 1.5)
+script = ExtResource("3")
+artwork_name = "MONA LISA"
+room_name = "DENON 711"
+artwork_texture = ExtResource("4")
+
+[node name="LibertyLeadingThePeople" type="Node2D" parent="Artworks" unique_id=2018597690]
+position = Vector2(385, 1532)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("3")
+artwork_name = "LIBERTY LEADING THE PEOPLE"
+room_name = "DENON 700"
+artwork_texture = ExtResource("5")
+
+[node name="WingedVictory" type="Node2D" parent="Artworks" unique_id=1254937596]
+position = Vector2(1094, 277.00006)
+scale = Vector2(1.4, 1.4)
+script = ExtResource("3")
+artwork_name = "WINGED VICTORY"
+room_name = "DENON 703"
+artwork_texture = ExtResource("6")
+
+[node name="CoronationOfNapoleon" type="Node2D" parent="Artworks" unique_id=672429625]
+position = Vector2(2127, 661)
+scale = Vector2(1.5, 1.5)
+script = ExtResource("3")
+artwork_name = "CORONATION OF NAPOLEON"
+room_name = "DENON 702"
+artwork_texture = ExtResource("7")
+
+[node name="RaftOfTheMedusa" type="Node2D" parent="Artworks" unique_id=126773212]
+position = Vector2(2087, 1502)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("3")
+artwork_name = "RAFT OF THE MEDUSA"
+room_name = "DENON 700B"
+artwork_texture = ExtResource("8")
+
+[node name="Markers" type="Node2D" parent="." unique_id=733179891]
+
+[node name="Stairs" type="Node2D" parent="Markers" unique_id=1586228508]
+position = Vector2(866, 1468)
+script = ExtResource("9")

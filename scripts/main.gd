@@ -3,27 +3,10 @@ extends Node2D
 const Tourist := preload("res://scripts/tourist.gd")
 const WORLD_SIZE := Vector2(2400, 1800)
 const VIEW_SIZE := Vector2(720, 720)
-const START := Vector2(150, 900)
-const EXIT := Vector2(2250, 900)
-const STAIRS := Vector2(1200, 900)
-const ATTRACTIONS := [
-	{"name": "CODE OF HAMMURABI", "room": "SULLY 227", "floor": 0, "position": Vector2(410, 310), "texture": preload("res://assets/artworks/code_of_hammurabi.jpg")},
-	{"name": "THE SEATED SCRIBE", "room": "SULLY 321", "floor": 0, "position": Vector2(410, 1430), "texture": preload("res://assets/artworks/seated_scribe.jpg")},
-	{"name": "DYING SLAVE", "room": "DENON 403", "floor": 0, "position": Vector2(1170, 350), "texture": preload("res://assets/artworks/dying_slave.jpg")},
-	{"name": "VENUS DE MILO", "room": "SULLY 345", "floor": 0, "position": Vector2(1980, 350), "texture": preload("res://assets/artworks/venus_de_milo.jpg")},
-	{"name": "MONA LISA", "room": "DENON 711", "floor": 1, "position": Vector2(410, 310), "texture": preload("res://assets/artworks/mona_lisa.jpg")},
-	{"name": "LIBERTY LEADING THE PEOPLE", "room": "DENON 700", "floor": 1, "position": Vector2(410, 1430), "texture": preload("res://assets/artworks/liberty_leading_the_people.jpg")},
-	{"name": "WINGED VICTORY", "room": "DENON 703", "floor": 1, "position": Vector2(1170, 1430), "texture": preload("res://assets/artworks/winged_victory.jpg")},
-	{"name": "CORONATION OF NAPOLEON", "room": "DENON 702", "floor": 1, "position": Vector2(1980, 350), "texture": preload("res://assets/artworks/coronation_of_napoleon.jpg")},
-	{"name": "RAFT OF THE MEDUSA", "room": "DENON 700B", "floor": 1, "position": Vector2(1980, 1430), "texture": preload("res://assets/artworks/raft_of_the_medusa.jpg")},
-]
-const WALLS := [
-	Rect2(50,80,2300,30), Rect2(50,1690,2300,30), Rect2(50,80,30,1640), Rect2(2320,80,30,1640),
-	Rect2(690,110,32,390), Rect2(690,660,32,430), Rect2(690,1260,32,430),
-	Rect2(1460,110,32,560), Rect2(1460,830,32,380), Rect2(1460,1370,32,320),
-	Rect2(722,610,280,30), Rect2(1160,610,300,30), Rect2(80,1190,250,30),
-	Rect2(500,1190,190,30), Rect2(1492,1260,300,30), Rect2(1960,1260,360,30),
-]
+var start_position := Vector2.ZERO
+var exit_position := Vector2.ZERO
+var stairs_position := Vector2.ZERO
+var attractions: Array[Dictionary] = []
 
 @export var crowd_count := 18
 @export_range(1.0, 5.0, 0.1) var goal_density_bias := 2.0
@@ -47,17 +30,28 @@ var stair_cooldown := 0.0
 var crowd_nodes: Array[Node] = []
 
 func _ready() -> void:
-	visited_attractions.resize(ATTRACTIONS.size())
+	_load_scene_layout()
+	visited_attractions.resize(attractions.size())
 	visited_attractions.fill(false)
-	_build_walls()
 	_build_player()
 	_build_ui()
 	_spawn_crowd()
 	queue_redraw()
 
+func _load_scene_layout() -> void:
+	start_position = $Level0/Markers/Entrance.global_position
+	exit_position = $Level0/Markers/Exit.global_position
+	stairs_position = $Level0/Markers/Stairs.global_position
+	for floor_index in 2:
+		var level: MuseumLevel = get_node("Level%d" % floor_index)
+		for artwork: MuseumArtwork in level.artwork_nodes():
+			attractions.append({"name": artwork.artwork_name, "room": artwork.room_name, "floor": floor_index, "position": artwork.global_position, "node": artwork})
+	$Level0.set_active(true)
+	$Level1.set_active(false)
+
 func _build_player() -> void:
 	player = CharacterBody2D.new()
-	player.position = START
+	player.position = start_position
 	player.z_index = 6
 	player.set_script(load("res://scripts/player.gd"))
 	add_child(player)
@@ -73,23 +67,6 @@ func _build_player() -> void:
 	camera.limit_right = int(WORLD_SIZE.x)
 	camera.limit_bottom = int(WORLD_SIZE.y)
 	player.add_child(camera)
-
-func _build_walls() -> void:
-	for rect in WALLS:
-		var wall := StaticBody2D.new()
-		wall.position = rect.get_center()
-		wall.z_index = 5
-		var collision := CollisionShape2D.new()
-		var shape := RectangleShape2D.new()
-		shape.size = rect.size
-		collision.shape = shape
-		wall.add_child(collision)
-		var visual := Polygon2D.new()
-		var half: Vector2 = rect.size * 0.5
-		visual.polygon = PackedVector2Array([Vector2(-half.x,-half.y),Vector2(half.x,-half.y),Vector2(half.x,half.y),Vector2(-half.x,half.y)])
-		visual.color = Color("#8f8170")
-		wall.add_child(visual)
-		add_child(wall)
 
 func _build_ui() -> void:
 	ui_layer = CanvasLayer.new()
@@ -133,7 +110,7 @@ func _spawn_crowd() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	var attraction_positions := PackedVector2Array()
-	for attraction in ATTRACTIONS:
+	for attraction in attractions:
 		if attraction.floor == current_floor:
 			attraction_positions.append(attraction.position)
 	var positions: Array[Vector2] = []
@@ -143,29 +120,29 @@ func _spawn_crowd() -> void:
 		var tourist := Tourist.new()
 		crowd_nodes.append(tourist)
 		tourist.position = spawn_position
-		tourist.setup(player, attraction_positions, rng.randi(), Rect2(80,110,2240,1580), WALLS)
+		tourist.setup(player, attraction_positions, rng.randi(), Rect2(80,110,2240,1580), _current_level().wall_rects())
 		tourist.photographed.connect(_on_photographed)
 		add_child(tourist)
 
 func _sample_crowd_position(rng: RandomNumberGenerator, existing_positions: Array[Vector2]) -> Vector2:
-	var candidate := Vector2(START.x + start_exclusion_radius, START.y)
+	var candidate := Vector2(start_position.x + start_exclusion_radius, start_position.y)
 	var valid_fallback := candidate
 	for attempt in 100:
 		# Higher bias values shift more of the crowd toward an attraction.
 		var progress := 1.0 - pow(rng.randf(), goal_density_bias)
-		var floor_attractions := ATTRACTIONS.filter(func(item): return item.floor == current_floor)
+		var floor_attractions := attractions.filter(func(item): return item.floor == current_floor)
 		var attraction: Dictionary = floor_attractions[rng.randi_range(0, floor_attractions.size() - 1)]
-		candidate = START.lerp(attraction.position, progress)
+		candidate = start_position.lerp(attraction.position, progress)
 		candidate += Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(80.0, 330.0)
 		candidate.x = clampf(candidate.x, 110.0, WORLD_SIZE.x - 110.0)
 		candidate.y = clampf(candidate.y, 140.0, WORLD_SIZE.y - 140.0)
 		# Entrance and destination are hard no-spawn zones.
-		if candidate.distance_to(START) < start_exclusion_radius:
+		if candidate.distance_to(start_position) < start_exclusion_radius:
 			continue
-		if candidate.distance_to(EXIT) < 135.0 or _inside_wall(candidate):
+		if candidate.distance_to(exit_position) < 135.0 or _inside_wall(candidate):
 			continue
 		var inside_attraction := false
-		for destination in ATTRACTIONS:
+		for destination in attractions:
 			if destination.floor != current_floor:
 				continue
 			if candidate.distance_to(destination.position) < attraction_exclusion_radius:
@@ -184,7 +161,7 @@ func _sample_crowd_position(rng: RandomNumberGenerator, existing_positions: Arra
 	return valid_fallback
 
 func _inside_wall(point: Vector2) -> bool:
-	for wall in WALLS:
+	for wall in _current_level().wall_rects():
 		if wall.grow(20.0).has_point(point):
 			return true
 	return false
@@ -194,22 +171,26 @@ func _process(delta: float) -> void:
 	stair_cooldown = maxf(stair_cooldown - delta, 0.0)
 	if game_over:
 		return
-	for index in ATTRACTIONS.size():
-		if ATTRACTIONS[index].floor == current_floor and not visited_attractions[index] and player.position.distance_to(ATTRACTIONS[index].position) < 55.0:
+	for index in attractions.size():
+		if attractions[index].floor == current_floor and not visited_attractions[index] and player.position.distance_to(attractions[index].position) < attractions[index].node.visit_radius:
 			visited_attractions[index] = true
-			status_label.text = "%s visited!" % ATTRACTIONS[index].name
+			attractions[index].node.set_visited(true)
+			status_label.text = "%s visited!" % attractions[index].name
 			_update_art_text()
 			queue_redraw()
-	if player.position.distance_to(STAIRS) < 55.0 and stair_cooldown <= 0.0:
+	if player.position.distance_to(stairs_position) < 55.0 and stair_cooldown <= 0.0:
 		_switch_floor()
-	if current_floor == 0 and player.position.distance_to(EXIT) < 60.0:
+	if current_floor == 0 and player.position.distance_to(exit_position) < 60.0:
 		game_over = true
 		player.set_physics_process(false)
 		_show_celebration_page()
 		queue_redraw()
 
 func _switch_floor() -> void:
+	_current_level().set_active(false)
 	current_floor = 1 - current_floor
+	_current_level().set_active(true)
+	stairs_position = _current_level().get_node("Markers/Stairs").global_position
 	stair_cooldown = 1.5
 	player.position += Vector2(0, 75)
 	floor_label.text = "LEVEL %d" % current_floor
@@ -220,6 +201,9 @@ func _switch_floor() -> void:
 	crowd_nodes.clear()
 	_spawn_crowd()
 	queue_redraw()
+
+func _current_level() -> MuseumLevel:
+	return get_node("Level%d" % current_floor) as MuseumLevel
 
 func _visited_count() -> int:
 	var count := 0
@@ -261,7 +245,7 @@ func _show_celebration_page() -> void:
 	page.add_child(heading)
 
 	var summary := Label.new()
-	summary.text = "Art visited: %d / %d\nCaught in photos: %d" % [_visited_count(), ATTRACTIONS.size(), exposures]
+	summary.text = "Art visited: %d / %d\nCaught in photos: %d" % [_visited_count(), attractions.size(), exposures]
 	summary.position = Vector2(0, 130)
 	summary.size = Vector2(VIEW_SIZE.x, 80)
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -293,34 +277,7 @@ func _update_exposure_text() -> void:
 	exposure_label.text = "PRIVACY  " + "●".repeat(maxi(remaining, 0)) + "○".repeat(mini(exposures, 3))
 
 func _update_art_text() -> void:
-	art_label.text = "ART %d / %d" % [_visited_count(), ATTRACTIONS.size()]
+	art_label.text = "ART %d / %d" % [_visited_count(), attractions.size()]
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("#d8cebc"))
-	draw_rect(Rect2(80,110,610,1580), Color("#e9e1d3"))
-	draw_rect(Rect2(722,110,738,1580), Color("#ded5c6"))
-	draw_rect(Rect2(1492,110,828,1580), Color("#e9e1d3"))
-	for x in range(180, 2300, 220):
-		draw_line(Vector2(x,110), Vector2(x,1690), Color(0.72,0.67,0.59,0.22), 2.0)
-	for y in range(190, 1690, 220):
-		draw_line(Vector2(80,y), Vector2(2320,y), Color(0.72,0.67,0.59,0.22), 2.0)
-	if current_floor == 0:
-		draw_rect(Rect2(80, START.y - 65, 85, 130), Color("#304b63"), true)
-		draw_string(ThemeDB.fallback_font, START + Vector2(-40,-80), "PYRAMID ENTRANCE", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#222536"))
-		draw_rect(Rect2(EXIT - Vector2(45,65), Vector2(90,130)), Color("#2d7654"), true)
-		draw_string(ThemeDB.fallback_font, EXIT + Vector2(-20,6), "EXIT", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color.WHITE)
-	draw_circle(STAIRS, 48.0, Color("#667d8d"))
-	draw_string(ThemeDB.fallback_font, STAIRS + Vector2(-26,6), "STAIRS", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
-	for index in ATTRACTIONS.size():
-		var attraction: Dictionary = ATTRACTIONS[index]
-		if attraction.floor != current_floor:
-			continue
-		var spot: Vector2 = attraction.position
-		var frame_rect := Rect2(spot - Vector2(35, 47), Vector2(70, 94))
-		var image_rect := Rect2(spot - Vector2(29, 41), Vector2(58, 82))
-		draw_rect(frame_rect, Color("#5b4636"), true)
-		draw_texture_rect(attraction.texture, image_rect, false)
-		draw_string(ThemeDB.fallback_font, spot + Vector2(-65, -57), "%s • %s" % [attraction.room, attraction.name], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#222536"))
-		if visited_attractions[index]:
-			draw_circle(spot, 50.0, Color(0.25, 0.85, 0.5, 0.24))
-			draw_string(ThemeDB.fallback_font, spot + Vector2(-8, 7), "✓", HORIZONTAL_ALIGNMENT_LEFT, -1, 25, Color("#174b32"))
+	pass

@@ -58,3 +58,10 @@ The game includes reduced-resolution images sourced from Wikimedia Commons.
 - Photograph: Marie-Lan Nguyen
 - Source: https://commons.wikimedia.org/wiki/File:Dying_slave_Louvre_MR_1590_n3.jpg
 - License: Released into the public domain by the photographer
+
+## Great Sphinx of Tanis
+
+- Work: *Great Sphinx of Tanis*, Louvre Museum
+- Photograph: Wilfredor
+- Source: https://commons.wikimedia.org/wiki/File:Great_Sphinx_of_Tanis,_Paris.jpg
+- License: CC0 1.0 Universal Public Domain Dedication

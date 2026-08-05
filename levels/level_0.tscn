@@ -1,0 +1,151 @@
+[gd_scene format=3 uid="uid://b7tt7ldacw4r"]
+
+[ext_resource type="Script" uid="uid://dcv8daat68cmy" path="res://scripts/museum_level.gd" id="1"]
+[ext_resource type="Script" uid="uid://dv5lf120kppgo" path="res://scripts/museum_wall.gd" id="2"]
+[ext_resource type="Script" uid="uid://e1sbw37h10c5" path="res://scripts/artwork.gd" id="3"]
+[ext_resource type="Texture2D" uid="uid://c178k3xy35qu0" path="res://assets/artworks/code_of_hammurabi.jpg" id="4"]
+[ext_resource type="Texture2D" uid="uid://bre3po77mkwrf" path="res://assets/artworks/seated_scribe.jpg" id="5"]
+[ext_resource type="Texture2D" uid="uid://cll0xg83qyvf8" path="res://assets/artworks/dying_slave.jpg" id="6"]
+[ext_resource type="Texture2D" uid="uid://d0s5a8jls01nw" path="res://assets/artworks/venus_de_milo.jpg" id="7"]
+[ext_resource type="Script" uid="uid://dhsxyl2l11jdj" path="res://scripts/location_marker.gd" id="8"]
+[ext_resource type="Texture2D" uid="uid://q2tv6qxl3k6d" path="res://assets/artworks/great_sphinx_of_tanis.jpg" id="8_tfamw"]
+
+[node name="Level0" type="Node2D" unique_id=235238859]
+script = ExtResource("1")
+
+[node name="Walls" type="Node2D" parent="." unique_id=1480496392]
+
+[node name="NorthBoundary" type="StaticBody2D" parent="Walls" unique_id=946682395]
+position = Vector2(1200, 95)
+script = ExtResource("2")
+wall_size = Vector2(2300, 30)
+
+[node name="SouthBoundary" type="StaticBody2D" parent="Walls" unique_id=166408080]
+position = Vector2(1200, 1705)
+script = ExtResource("2")
+wall_size = Vector2(2300, 30)
+
+[node name="WestBoundary" type="StaticBody2D" parent="Walls" unique_id=1885212922]
+position = Vector2(65, 900)
+script = ExtResource("2")
+wall_size = Vector2(30, 1640)
+
+[node name="EastBoundary" type="StaticBody2D" parent="Walls" unique_id=1120199964]
+position = Vector2(2335, 900)
+script = ExtResource("2")
+wall_size = Vector2(30, 1640)
+
+[node name="GalleryWall01" type="StaticBody2D" parent="Walls" unique_id=10989515]
+position = Vector2(706, 305)
+script = ExtResource("2")
+wall_size = Vector2(32, 390)
+
+[node name="GalleryWall02" type="StaticBody2D" parent="Walls" unique_id=639570283]
+position = Vector2(706, 875)
+script = ExtResource("2")
+wall_size = Vector2(32, 430)
+
+[node name="GalleryWall03" type="StaticBody2D" parent="Walls" unique_id=635472108]
+position = Vector2(706, 1475)
+script = ExtResource("2")
+wall_size = Vector2(32, 430)
+
+[node name="GalleryWall04" type="StaticBody2D" parent="Walls" unique_id=593573235]
+position = Vector2(1475, 380)
+script = ExtResource("2")
+wall_size = Vector2(32, 550)
+
+[node name="GalleryWall05" type="StaticBody2D" parent="Walls" unique_id=1079525086]
+position = Vector2(1479, 1100)
+script = ExtResource("2")
+wall_size = Vector2(32, 380)
+
+[node name="GalleryWall07" type="StaticBody2D" parent="Walls" unique_id=805708782]
+position = Vector2(830, 646)
+script = ExtResource("2")
+wall_size = Vector2(280, 30)
+
+[node name="GalleryWall08" type="StaticBody2D" parent="Walls" unique_id=660866627]
+position = Vector2(1341, 646)
+script = ExtResource("2")
+wall_size = Vector2(300, 30)
+
+[node name="GalleryWall09" type="StaticBody2D" parent="Walls" unique_id=1151376269]
+position = Vector2(205, 1247)
+script = ExtResource("2")
+wall_size = Vector2(250, 30)
+
+[node name="GalleryWall10" type="StaticBody2D" parent="Walls" unique_id=1914407964]
+position = Vector2(627, 1246)
+script = ExtResource("2")
+wall_size = Vector2(190, 30)
+
+[node name="GalleryWall11" type="StaticBody2D" parent="Walls" unique_id=620664765]
+position = Vector2(1642, 1275)
+script = ExtResource("2")
+wall_size = Vector2(300, 30)
+
+[node name="GalleryWall12" type="StaticBody2D" parent="Walls" unique_id=1502879349]
+position = Vector2(2140, 1275)
+script = ExtResource("2")
+wall_size = Vector2(360, 30)
+
+[node name="Artworks" type="Node2D" parent="." unique_id=572626755]
+
+[node name="CodeOfHammurabi" type="Node2D" parent="Artworks" unique_id=1528984709]
+position = Vector2(377, 324)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("3")
+artwork_name = "CODE OF HAMMURABI"
+room_name = "SULLY 227"
+artwork_texture = ExtResource("4")
+
+[node name="SeatedScribe" type="Node2D" parent="Artworks" unique_id=986436699]
+position = Vector2(385, 1541)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("3")
+artwork_name = "THE SEATED SCRIBE"
+room_name = "SULLY 321"
+artwork_texture = ExtResource("5")
+
+[node name="DyingSlave" type="Node2D" parent="Artworks" unique_id=2011808703]
+position = Vector2(1068, 250)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("3")
+artwork_name = "DYING SLAVE"
+room_name = "DENON 403"
+artwork_texture = ExtResource("6")
+
+[node name="VenusDeMilo" type="Node2D" parent="Artworks" unique_id=539097966]
+position = Vector2(1901, 324.00003)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("3")
+artwork_name = "VENUS DE MILO"
+room_name = "SULLY 345"
+artwork_texture = ExtResource("7")
+
+[node name="GreatSphinxOfTanis" type="Node2D" parent="Artworks" unique_id=1575764766]
+position = Vector2(2147, 1507)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("3")
+artwork_name = "GREAT SPHINX OF TANIS"
+room_name = "SULLY 345"
+artwork_texture = ExtResource("8_tfamw")
+
+[node name="Markers" type="Node2D" parent="." unique_id=425103788]
+
+[node name="Entrance" type="Node2D" parent="Markers" unique_id=872881060]
+position = Vector2(129, 895)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("8")
+marker_type = "Entrance"
+
+[node name="Exit" type="Node2D" parent="Markers" unique_id=197978817]
+position = Vector2(2267, 900.00006)
+scale = Vector2(1.2, 1.2)
+script = ExtResource("8")
+marker_type = "Exit"
+
+[node name="Stairs" type="Node2D" parent="Markers" unique_id=1831081898]
+position = Vector2(952, 1479)
+script = ExtResource("8")
