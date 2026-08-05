@@ -1,16 +1,33 @@
-# Next Step (consideration)
-*1. 2D or 3D game
+# Next Step (Considerations)
 
-# Future Idea
-*1. Show picture of me that got captured in the run (in 3D)
-*2. The picture idealy are based by my speed (more motion blur if I move faster)
-*3. Dodge botton to roll
-*4. More varity of challenges:
-  *4.1 自己给景点照相，且不想照到别的游客
-  *4.2 需要做更多的事：买票，拿地图/guide，有guide会需要按某个指定路线游览，买纪念品
-  *4.3 增加体力条？dash消耗体力条太多之后，要买水/买吃的补充能量
-  *4.4 增加san值条？被拍到被撞到会降san，买冰淇淋纪念品之类的会增san
-*5. 游客（敌人）分类, 有不同动作
-  *5.1 小屁孩跑得快会来撞你把你撞飞一段距离
-  *5.2 网红自拍时间比较久
-  *5.3 老年游客团会集体合照挡住art
+1. Decide whether the game should be 2D or 3D.
+
+# Future Ideas
+
+1. Show a picture of me that was captured during the run, especially in the 3D version.
+2. Make the picture depend on my movement speed:
+   - More motion blur when I move faster.
+3. Add a dodge button that makes the player roll.
+4. Add more variety to the challenges:
+   1. 自己给景点照相，同时尽量不要拍到其他游客。
+   2. 增加更多任务，例如：
+      - 买票
+      - 拿地图或导览
+      - 按照导览指定的路线游览
+      - 买纪念品
+   3. 增加体力条：
+      - Dash 会消耗体力。
+      - 体力过低时，需要买水或食物补充。
+   4. 增加 SAN 值：
+      - 被拍到或被撞到时，SAN 值下降。
+      - 买冰淇淋、纪念品等可以恢复 SAN 值。
+5. 增加不同类型的游客（敌人），并为他们设计不同动作：
+   1. 小屁孩：
+      - 跑得快。
+      - 会撞玩家，把玩家撞飞一段距离。
+   2. 网红：
+      - 自拍时间较长。
+      - 会长时间挡住某个区域。
+   3. 老年游客团：
+      - 会集体合照。
+      - 可能挡住景点或艺术品。
