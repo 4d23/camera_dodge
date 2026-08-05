@@ -2,7 +2,7 @@ extends Node2D
 
 const Tourist := preload("res://scripts/tourist.gd")
 const WORLD_SIZE := Vector2(2400, 1800)
-const VIEW_SIZE := Vector2(720, 720)
+var view_size: Vector2
 var start_position := Vector2.ZERO
 var exit_position := Vector2.ZERO
 var stairs_position := Vector2.ZERO
@@ -16,7 +16,6 @@ var start_exclusion_radius: float
 var attraction_exclusion_radius: float
 var exit_exclusion_radius: float
 var artwork_view_duration: float
-var artwork_visit_radius: float
 
 var player: CharacterBody2D
 var exposures := 0
@@ -35,6 +34,7 @@ var stair_cooldown := 0.0
 var crowd_nodes: Array[Node] = []
 
 func _ready() -> void:
+	view_size = get_viewport_rect().size
 	if not _load_game_params():
 		return
 	_load_scene_layout()
@@ -58,8 +58,8 @@ func _load_game_params() -> bool:
 		return false
 	game_params = parsed
 	var required := {
-		"player": ["speed", "invulnerability_duration"],
-		"artwork": ["view_duration", "visit_radius"],
+		"player": ["speed", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
+		"artwork": ["view_duration"],
 		"crowd": ["count", "goal_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius"],
 		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "initial_wander_min", "initial_wander_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max", "wander_min", "wander_max"]
 	}
@@ -74,7 +74,6 @@ func _load_game_params() -> bool:
 	var artwork: Dictionary = game_params.artwork
 	var crowd: Dictionary = game_params.crowd
 	artwork_view_duration = float(artwork.view_duration)
-	artwork_visit_radius = float(artwork.visit_radius)
 	crowd_count = int(crowd.count)
 	goal_density_bias = float(crowd.goal_density_bias)
 	minimum_crowd_spacing = float(crowd.minimum_spacing)
@@ -148,7 +147,7 @@ func _build_ui() -> void:
 
 	flash_overlay = ColorRect.new()
 	flash_overlay.color = Color(1, 1, 1, 0)
-	flash_overlay.size = VIEW_SIZE
+	flash_overlay.size = view_size
 	flash_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui_layer.add_child(flash_overlay)
 
@@ -220,19 +219,23 @@ func _process(delta: float) -> void:
 	for index in attractions.size():
 		if visited_attractions[index]:
 			continue
-		var is_viewing: bool = attractions[index].floor == current_floor and player.position.distance_to(attractions[index].position) < artwork_visit_radius
+		var artwork_node: MuseumArtwork = attractions[index].node
+		var is_viewing: bool = attractions[index].floor == current_floor and artwork_node.contains_world_point(player.global_position)
 		if is_viewing:
 			artwork_view_progress[index] += delta
 			var remaining := maxf(artwork_view_duration - artwork_view_progress[index], 0.0)
+			artwork_node.set_view_progress(artwork_view_progress[index] / artwork_view_duration, remaining)
 			status_label.text = "Viewing %s… %.1fs" % [attractions[index].name, remaining]
 			if artwork_view_progress[index] >= artwork_view_duration:
 				visited_attractions[index] = true
-				attractions[index].node.set_visited(true)
+				artwork_node.set_view_progress(0.0, 0.0)
+				artwork_node.set_visited(true)
 				status_label.text = "%s visited!" % attractions[index].name
 				_update_art_text()
 				queue_redraw()
 		else:
 			artwork_view_progress[index] = 0.0
+			artwork_node.set_view_progress(0.0, 0.0)
 	if player.position.distance_to(stairs_position) < 55.0 and stair_cooldown <= 0.0:
 		_switch_floor()
 	if current_floor == 0 and player.position.distance_to(exit_position) < 60.0:
@@ -287,13 +290,13 @@ func _on_photographed() -> void:
 func _show_celebration_page() -> void:
 	var page := ColorRect.new()
 	page.color = Color("#171923")
-	page.size = VIEW_SIZE
+	page.size = view_size
 	ui_layer.add_child(page)
 
 	var heading := Label.new()
 	heading.text = "MUSEUM VISIT COMPLETE"
 	heading.position = Vector2(0, 65)
-	heading.size = Vector2(VIEW_SIZE.x, 55)
+	heading.size = Vector2(view_size.x, 55)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	heading.add_theme_font_size_override("font_size", 38)
 	heading.add_theme_color_override("font_color", Color("#f4d35e"))
@@ -302,14 +305,14 @@ func _show_celebration_page() -> void:
 	var summary := Label.new()
 	summary.text = "Art visited: %d / %d\nCaught in photos: %d" % [_visited_count(), attractions.size(), exposures]
 	summary.position = Vector2(0, 130)
-	summary.size = Vector2(VIEW_SIZE.x, 80)
+	summary.size = Vector2(view_size.x, 80)
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	summary.add_theme_font_size_override("font_size", 24)
 	page.add_child(summary)
 
 	var result := Label.new()
 	result.position = Vector2(0, 245)
-	result.size = Vector2(VIEW_SIZE.x, 70)
+	result.size = Vector2(view_size.x, 70)
 	result.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	result.add_theme_font_size_override("font_size", 28)
 	if exposures == 0:
@@ -322,7 +325,7 @@ func _show_celebration_page() -> void:
 	var restart_hint := Label.new()
 	restart_hint.text = "Press R to travel again"
 	restart_hint.position = Vector2(0, 525)
-	restart_hint.size = Vector2(VIEW_SIZE.x, 35)
+	restart_hint.size = Vector2(view_size.x, 35)
 	restart_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	restart_hint.add_theme_font_size_override("font_size", 20)
 	page.add_child(restart_hint)

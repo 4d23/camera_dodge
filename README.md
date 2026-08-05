@@ -7,8 +7,9 @@ A small Godot 4 top-down survival prototype. Cross a crowded museum from the ent
 1. Open this folder in Godot 4.x.
 2. Run the project (`F6`/`F5`).
 3. Move with WASD or the arrow keys.
-4. Yellow cones show a camera being aimed. Leave the frame before it flashes red.
-5. Three photo exposures end the run. Reach the Mona Lisa to win. Press `R` to restart.
+4. Press `Space` to dash in your movement direction.
+5. Yellow cones show a camera being aimed. Leave the frame before it flashes red.
+6. Three photo exposures end the run. Reach the exit to finish. Press `R` to restart.
 
 Museum artwork textures are stored under `res://assets/artworks`; characters and environment shapes remain procedurally drawn.
 
@@ -23,7 +24,7 @@ Under `Walls`, select and drag a wall in the 2D viewport. Change its `Wall Size`
 
 Under `Artworks`, select and drag an artwork. Its name, room, and texture are editable in the Inspector. Duplicate an artwork node to add another featured room, then assign a different texture and metadata.
 
-Gameplay tuning values are centralized in `res://config/game_params.json`. Edit this file to change player speed, artwork viewing duration/radius, crowd density and spacing, tourist movement speed, camera radius/FOV, and camera timing.
+Gameplay tuning values are centralized in `res://config/game_params.json`. Edit this file to change player speed, artwork viewing duration, crowd density and spacing, tourist movement speed, camera radius/FOV, and camera timing.
 
 Under `Markers`, drag the entrance, exit, or stairs. The running game reads these scene positions automatically.
 
