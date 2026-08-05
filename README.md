@@ -30,3 +30,4 @@ Under `Markers`, drag the entrance, exit, or stairs. The running game reads thes
 
 ## Demo
 Webpage: https://4d23.github.io/camera_dodge/ 
+Control: W A S D Space (dash)
