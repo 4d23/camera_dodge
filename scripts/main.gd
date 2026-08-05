@@ -58,7 +58,7 @@ func _load_game_params() -> bool:
 		return false
 	game_params = parsed
 	var required := {
-		"player": ["speed", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
+		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
 		"artwork": ["view_duration"],
 		"crowd": ["count", "goal_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius"],
 		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "initial_wander_min", "initial_wander_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max", "wander_min", "wander_max"]

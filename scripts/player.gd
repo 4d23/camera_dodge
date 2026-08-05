@@ -1,6 +1,9 @@
 extends CharacterBody2D
 
 var speed: float
+var acceleration: float
+var deceleration: float
+var controller_deadzone: float
 var invulnerability_duration: float
 var dash_speed: float
 var dash_duration: float
@@ -21,6 +24,12 @@ func _physics_process(delta: float) -> void:
 	)
 	if wasd.length_squared() > 0.0:
 		direction = wasd.normalized()
+	var analog_direction := Vector2(
+		Input.get_joy_axis(0, JOY_AXIS_LEFT_X),
+		Input.get_joy_axis(0, JOY_AXIS_LEFT_Y)
+	)
+	if analog_direction.length() >= controller_deadzone:
+		direction = analog_direction.limit_length(1.0)
 	if direction.length_squared() > 0.0:
 		last_move_direction = direction.normalized()
 	var dash_pressed := Input.is_physical_key_pressed(KEY_SPACE)
@@ -33,7 +42,9 @@ func _physics_process(delta: float) -> void:
 		dash_timer -= delta
 		velocity = dash_direction * dash_speed
 	else:
-		velocity = direction * speed
+		var target_velocity := direction * speed
+		var change_rate := acceleration if direction.length_squared() > 0.0 else deceleration
+		velocity = velocity.move_toward(target_velocity, change_rate * delta)
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
 	move_and_slide()
 	if invulnerable:
@@ -49,6 +60,9 @@ func hit() -> void:
 
 func configure(params: Dictionary) -> void:
 	speed = float(params.speed)
+	acceleration = float(params.acceleration)
+	deceleration = float(params.deceleration)
+	controller_deadzone = float(params.controller_deadzone)
 	invulnerability_duration = float(params.invulnerability_duration)
 	dash_speed = float(params.dash_speed)
 	dash_duration = float(params.dash_duration)

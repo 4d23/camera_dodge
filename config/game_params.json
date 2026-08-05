@@ -1,6 +1,9 @@
 {
   "player": {
 	"speed": 205.0,
+	"acceleration": 1100.0,
+	"deceleration": 1400.0,
+	"controller_deadzone": 0.2,
 	"invulnerability_duration": 1.0,
 	"dash_speed": 560.0,
 	"dash_duration": 0.18,
