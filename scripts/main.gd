@@ -169,9 +169,14 @@ func _spawn_crowd() -> void:
 	var elderly_members_left := 0
 	var elderly_member_index := 0
 	var elderly_group_anchor := Vector2.ZERO
+	var elderly_group_direction := Vector2.LEFT
 	var elderly_group_seed := 0
+	var elderly_guide: CameraTourist
+	var elderly_previous_member: CameraTourist
 	for index in crowd_count:
-		var tourist_type := "elderly" if elderly_members_left > 0 else _pick_tourist_type(rng)
+		var elderly_group_size := int(game_params.tourist_types.elderly.group_size)
+		var has_room_for_full_group := crowd_count - index >= elderly_group_size
+		var tourist_type := "elderly" if elderly_members_left > 0 else _pick_tourist_type(rng, has_room_for_full_group)
 		var spawn_position: Vector2
 		var tourist_seed := rng.randi()
 		if tourist_type == "elderly":
@@ -179,9 +184,11 @@ func _spawn_crowd() -> void:
 			if elderly_members_left <= 0:
 				elderly_members_left = int(elderly_params.group_size)
 				elderly_member_index = 0
-				elderly_group_anchor = _sample_crowd_position(rng, positions)
+				var group_layout := _sample_elderly_group_layout(rng, positions, elderly_members_left, 36.0)
+				elderly_group_anchor = group_layout.anchor
+				elderly_group_direction = group_layout.direction
 				elderly_group_seed = rng.randi()
-			spawn_position = _elderly_formation_position(elderly_group_anchor, elderly_member_index, int(elderly_params.group_size), float(elderly_params.formation_radius))
+			spawn_position = elderly_group_anchor + elderly_group_direction * 36.0 * elderly_member_index
 			tourist_seed = elderly_group_seed
 			elderly_member_index += 1
 			elderly_members_left -= 1
@@ -191,26 +198,66 @@ func _spawn_crowd() -> void:
 		var tourist := Tourist.new()
 		crowd_nodes.append(tourist)
 		tourist.position = spawn_position
-		tourist.setup(player, attraction_positions, tourist_seed, Rect2(80,110,2240,1580), _current_level().wall_rects(), game_params.tourist, tourist_type, game_params.tourist_types[tourist_type])
+		var is_tour_guide := tourist_type == "elderly" and elderly_member_index == 1
+		var formation_offset := spawn_position - elderly_group_anchor if tourist_type == "elderly" else Vector2.ZERO
+		var group_slot := elderly_member_index - 1 if tourist_type == "elderly" else 0
+		var group_size := int(game_params.tourist_types.elderly.group_size) if tourist_type == "elderly" else 1
+		tourist.setup(player, attraction_positions, tourist_seed, Rect2(80,110,2240,1580), _current_level().wall_rects(), game_params.tourist, tourist_type, game_params.tourist_types[tourist_type], is_tour_guide, elderly_guide, formation_offset, group_slot, group_size, elderly_previous_member)
+		if is_tour_guide:
+			elderly_guide = tourist
+			elderly_previous_member = tourist
+		elif tourist_type == "elderly":
+			elderly_previous_member = tourist
 		tourist.photographed.connect(_on_photographed)
 		add_child(tourist)
 
-func _elderly_formation_position(anchor: Vector2, member_index: int, group_size: int, radius: float) -> Vector2:
-	if member_index == 0:
-		return anchor
-	var angle := TAU * float(member_index - 1) / float(maxi(group_size - 1, 1))
-	var candidate := anchor + Vector2.from_angle(angle) * radius
-	if _inside_wall(candidate):
-		candidate = anchor + Vector2.from_angle(angle + PI) * radius * 0.6
-	return candidate
+func _sample_elderly_group_layout(rng: RandomNumberGenerator, existing_positions: Array[Vector2], group_size: int, spacing: float) -> Dictionary:
+	for attempt in 80:
+		var anchor := _sample_crowd_position(rng, existing_positions)
+		var base_angle := rng.randf_range(0.0, TAU)
+		# Try several orientations at the same anchor before sampling a new one.
+		for direction_index in 8:
+			var direction := Vector2.from_angle(base_angle + direction_index * TAU / 8.0)
+			if _elderly_line_fits(anchor, direction, group_size, spacing, existing_positions):
+				return {"anchor": anchor, "direction": direction}
+	# The map has ample open space, so this should only be reached with invalid
+	# level geometry. Keep the fallback together instead of flipping individuals.
+	return {"anchor": _sample_crowd_position(rng, existing_positions), "direction": Vector2.LEFT}
 
-func _pick_tourist_type(rng: RandomNumberGenerator) -> String:
+func _elderly_line_fits(anchor: Vector2, direction: Vector2, group_size: int, spacing: float, existing_positions: Array[Vector2]) -> bool:
+	# Check the continuous line as well as member centers so a thin wall cannot
+	# slip through a gap between two tourists.
+	var line_length := spacing * maxi(group_size - 1, 0)
+	var sample_count := maxi(ceili(line_length / 10.0), 1)
+	for sample_index in sample_count + 1:
+		if _inside_wall(anchor + direction * line_length * sample_index / sample_count):
+			return false
+	for member_index in group_size:
+		var point := anchor + direction * spacing * member_index
+		if point.x < 110.0 or point.x > WORLD_SIZE.x - 110.0 or point.y < 140.0 or point.y > WORLD_SIZE.y - 140.0:
+			return false
+		if _inside_wall(point):
+			return false
+		if point.distance_to(start_position) < start_exclusion_radius or point.distance_to(exit_position) < exit_exclusion_radius:
+			return false
+		for destination in attractions:
+			if destination.floor == current_floor and point.distance_to(destination.position) < attraction_exclusion_radius:
+				return false
+		for other_position in existing_positions:
+			if point.distance_to(other_position) < minimum_crowd_spacing:
+				return false
+	return true
+
+func _pick_tourist_type(rng: RandomNumberGenerator, allow_elderly := true) -> String:
 	var weights: Dictionary = game_params.crowd.type_weights
 	var total := 0.0
-	for weight in weights.values():
-		total += float(weight)
+	for type_name: String in weights:
+		if type_name != "elderly" or allow_elderly:
+			total += float(weights[type_name])
 	var roll := rng.randf() * total
 	for type_name: String in weights:
+		if type_name == "elderly" and not allow_elderly:
+			continue
 		roll -= float(weights[type_name])
 		if roll <= 0.0:
 			return type_name

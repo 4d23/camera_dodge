@@ -19,9 +19,9 @@
 	"exit_exclusion_radius": 135.0,
 	"type_weights": {
 	  "regular": 0.5,
-	  "kid": 0.35,
-	  "influencer": 0.05,
-	  "elderly": 0.1
+	  "kid": 0.2,
+	  "influencer": 0.1,
+	  "elderly": 0.2
 	}
   },
   "tourist": {
@@ -56,9 +56,10 @@
 	  "fov_degrees": 85.0
 	},
 	"elderly": {
-	  "speed_multiplier": 0.45,
-	  "group_size": 7,
-	  "formation_radius": 55.0,
+	  "speed_multiplier": 0.7,
+	  "group_size": 10,
+	  "takes_photos": false,
+	  "formation_radius": 100.0,
 	  "aim_duration": 3.0,
 	  "initial_wander_min": 2.0,
 	  "initial_wander_max": 2.0,
