@@ -15,6 +15,8 @@ var dash_cooldown_timer := 0.0
 var dash_was_pressed := false
 var last_move_direction := Vector2.RIGHT
 var dash_direction := Vector2.RIGHT
+var knockback_timer := 0.0
+var knockback_velocity := Vector2.ZERO
 
 func _physics_process(delta: float) -> void:
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
@@ -38,7 +40,10 @@ func _physics_process(delta: float) -> void:
 		dash_timer = dash_duration
 		dash_cooldown_timer = dash_cooldown
 	dash_was_pressed = dash_pressed
-	if dash_timer > 0.0:
+	if knockback_timer > 0.0:
+		knockback_timer -= delta
+		velocity = knockback_velocity
+	elif dash_timer > 0.0:
 		dash_timer -= delta
 		velocity = dash_direction * dash_speed
 	else:
@@ -57,6 +62,13 @@ func hit() -> void:
 	invulnerable = true
 	invulnerability_timer = invulnerability_duration
 	queue_redraw()
+
+func apply_knockback(source_position: Vector2, knockback_speed: float, duration: float) -> void:
+	var away := global_position - source_position
+	if away.length_squared() < 0.01:
+		away = -last_move_direction
+	knockback_velocity = away.normalized() * knockback_speed
+	knockback_timer = duration
 
 func configure(params: Dictionary) -> void:
 	speed = float(params.speed)

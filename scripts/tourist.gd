@@ -18,24 +18,38 @@ var body_color := Color("#5b6ee1")
 var view_radius: float
 var fov_degrees: float
 var params: Dictionary = {}
+var type_params: Dictionary = {}
+var tourist_type := "regular"
+var collision_cooldown := 0.0
+var video_hit_timer := 0.0
 
-func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, seed_value: int, movement_bounds := Rect2(55, 105, 1042, 485), blocking_walls: Array = [], tourist_params: Dictionary = {}) -> void:
+func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, seed_value: int, movement_bounds := Rect2(55, 105, 1042, 485), blocking_walls: Array = [], tourist_params: Dictionary = {}, archetype := "regular", archetype_params: Dictionary = {}) -> void:
 	player = target
 	attractions = attraction_positions
 	bounds = movement_bounds
 	walls = blocking_walls
 	params = tourist_params
-	view_radius = float(params.view_radius)
-	fov_degrees = float(params.fov_degrees)
+	tourist_type = archetype
+	type_params = archetype_params
+	view_radius = _param("view_radius")
+	fov_degrees = _param("fov_degrees")
 	rng.seed = seed_value
-	body_color = [Color("#5b6ee1"), Color("#e07a5f"), Color("#7f5af0"), Color("#2a9d8f")][seed_value % 4]
+	body_color = {"regular": Color("#5b6ee1"), "kid": Color("#ff8c42"), "influencer": Color("#ed5db1"), "elderly": Color("#758c72")}.get(tourist_type, Color("#5b6ee1"))
 	_choose_velocity()
-	timer = rng.randf_range(_param("initial_wander_min"), _param("initial_wander_max"))
+	if bool(type_params.get("takes_video", false)):
+		state = CameraState.AIM
+		aim_angle = global_position.angle_to_point(_closest_attraction())
+		video_hit_timer = 0.0
+	else:
+		timer = rng.randf_range(_param("initial_wander_min"), _param("initial_wander_max"))
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(player):
 		return
+	collision_cooldown = maxf(collision_cooldown - delta, 0.0)
+	if tourist_type == "kid":
+		_check_kid_collision()
 	timer -= delta
 	match state:
 		CameraState.WANDER:
@@ -45,12 +59,19 @@ func _physics_process(delta: float) -> void:
 			else:
 				position = next_position
 			_bounce_inside_bounds()
-			if timer <= 0.0:
+			if timer <= 0.0 and bool(type_params.get("takes_photos", true)):
 				state = CameraState.AIM
 				aim_angle = global_position.angle_to_point(_closest_attraction())
 				timer = _param("aim_duration")
 		CameraState.AIM:
-			if timer <= 0.0:
+			if bool(type_params.get("takes_video", false)):
+				_move_with_current_velocity(delta)
+				aim_angle = global_position.angle_to_point(_closest_attraction())
+				video_hit_timer = maxf(video_hit_timer - delta, 0.0)
+				if video_hit_timer <= 0.0 and _player_is_in_frame():
+					photographed.emit()
+					video_hit_timer = float(type_params.video_hit_interval)
+			if timer <= 0.0 and not bool(type_params.get("takes_video", false)):
 				state = CameraState.FLASH
 				timer = _param("flash_duration")
 				if _player_is_in_frame():
@@ -67,12 +88,31 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 func _choose_velocity() -> void:
-	velocity = Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(_param("speed_min"), _param("speed_max"))
+	var multiplier := float(type_params.get("speed_multiplier", 1.0))
+	velocity = Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(_param("speed_min"), _param("speed_max")) * multiplier
+
+func _move_with_current_velocity(delta: float) -> void:
+	var next_position := position + velocity * delta
+	if _inside_wall(next_position):
+		velocity *= -1.0
+	else:
+		position = next_position
+	_bounce_inside_bounds()
 
 func _param(key: String) -> float:
-	return float(params[key])
+	return float(type_params.get(key, params[key]))
+
+func _check_kid_collision() -> void:
+	if collision_cooldown > 0.0:
+		return
+	if global_position.distance_to(player.global_position) <= float(type_params.collision_radius):
+		player.apply_knockback(global_position, float(type_params.knockback_speed), float(type_params.knockback_duration))
+		collision_cooldown = float(type_params.knockback_cooldown)
 
 func _closest_attraction() -> Vector2:
+	# Elderly tour groups synchronize around the same featured artwork.
+	if tourist_type == "elderly" and bool(type_params.get("synchronized", false)):
+		return attractions[0]
 	var closest := attractions[0]
 	var closest_distance := global_position.distance_squared_to(closest)
 	for attraction in attractions:
@@ -110,7 +150,8 @@ func _view_blocked() -> bool:
 
 func _draw() -> void:
 	if state == CameraState.AIM or state == CameraState.FLASH:
-		var color := Color(1.0, 0.82, 0.18, 0.22) if state == CameraState.AIM else Color(1.0, 0.18, 0.12, 0.55)
+		var is_video := bool(type_params.get("takes_video", false)) and state == CameraState.AIM
+		var color := Color(0.95, 0.12, 0.55, 0.36) if is_video else (Color(1.0, 0.82, 0.18, 0.22) if state == CameraState.AIM else Color(1.0, 0.18, 0.12, 0.55))
 		var half_fov := deg_to_rad(fov_degrees * 0.5)
 		var points := PackedVector2Array([Vector2(18, 0).rotated(aim_angle)])
 		var arc_segments := 24
@@ -125,5 +166,11 @@ func _draw() -> void:
 	draw_circle(Vector2(0, -15), 9.0, Color("#f2c6a0"))
 	var camera_direction := Vector2.from_angle(aim_angle if state != CameraState.WANDER else velocity.angle())
 	draw_line(camera_direction * 7.0, camera_direction * 21.0, Color("#222536"), 7.0)
-	if state == CameraState.AIM:
+	var type_label: String = {"kid": "KID", "influencer": "LIVE", "elderly": "GROUP"}.get(tourist_type, "")
+	if type_label != "":
+		draw_string(ThemeDB.fallback_font, Vector2(-18, 35), type_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#222536"))
+	if bool(type_params.get("takes_video", false)) and state == CameraState.AIM:
+		draw_circle(Vector2(-25, -30), 5.0, Color("#ff1744"))
+		draw_string(ThemeDB.fallback_font, Vector2(-17, -26), "REC", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#ff1744"))
+	if state == CameraState.AIM and not bool(type_params.get("takes_video", false)):
 		draw_arc(Vector2.ZERO, 23.0, -PI / 2.0, -PI / 2.0 + TAU * (timer / _param("aim_duration")), 24, Color.WHITE, 3.0)
