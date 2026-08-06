@@ -34,7 +34,9 @@ func _physics_process(delta: float) -> void:
 		direction = analog_direction.limit_length(1.0)
 	if direction.length_squared() > 0.0:
 		last_move_direction = direction.normalized()
-	var dash_pressed := Input.is_physical_key_pressed(KEY_SPACE)
+	# The named action makes dash testable and remappable while preserving the
+	# existing Space-key control for projects without an explicit input mapping.
+	var dash_pressed := Input.is_physical_key_pressed(KEY_SPACE) or (InputMap.has_action("dash") and Input.is_action_pressed("dash"))
 	if dash_pressed and not dash_was_pressed and dash_cooldown_timer <= 0.0 and dash_timer <= 0.0:
 		dash_direction = last_move_direction
 		dash_timer = dash_duration

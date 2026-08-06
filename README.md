@@ -28,6 +28,16 @@ Gameplay tuning values are centralized in `res://config/game_params.json`. Edit 
 
 Tourists have four configurable archetypes: regular photographers, fast children that knock the player back, influencers with long selfie camera zones, and synchronized elderly tour groups that photograph the same artwork. Their spawn weights and behavior overrides are under `crowd.type_weights` and `tourist_types` in `game_params.json`.
 
+## Tests
+
+Run the automated gameplay checks headlessly:
+
+```bash
+godot --headless --path . --log-file ./godot-tests.log --script res://tests/test_runner.gd
+```
+
+The suite checks every tourist archetype, movement and dash controls, artwork viewing, and entrance/exit behavior. Pull requests run the same suite through GitHub Actions.
+
 Under `Markers`, drag the entrance, exit, or stairs. The running game reads these scene positions automatically.
 
 ## Demo

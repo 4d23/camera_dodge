@@ -1,6 +1,7 @@
 # Godot-generated editor and import cache
 .godot/
 *.import
+godot-tests.log
 
 # Local editor configuration
 .vscode/
