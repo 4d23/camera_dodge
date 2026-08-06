@@ -60,7 +60,7 @@ func _load_game_params() -> bool:
 	var required := {
 		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
 		"artwork": ["view_duration"],
-		"crowd": ["count", "goal_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius"],
+		"crowd": ["count", "goal_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
 		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "initial_wander_min", "initial_wander_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max", "wander_min", "wander_max"]
 	}
 	for section_name: String in required:
@@ -71,6 +71,13 @@ func _load_game_params() -> bool:
 			if not game_params[section_name].has(key):
 				push_error("game_params.json is missing: %s.%s" % [section_name, key])
 				return false
+	if not game_params.has("tourist_types") or not game_params.tourist_types is Dictionary:
+		push_error("game_params.json is missing section: tourist_types")
+		return false
+	for type_name in game_params.crowd.type_weights:
+		if not game_params.tourist_types.has(type_name):
+			push_error("Missing tourist_types configuration for: %s" % type_name)
+			return false
 	var artwork: Dictionary = game_params.artwork
 	var crowd: Dictionary = game_params.crowd
 	artwork_view_duration = float(artwork.view_duration)
@@ -159,15 +166,55 @@ func _spawn_crowd() -> void:
 		if attraction.floor == current_floor:
 			attraction_positions.append(attraction.position)
 	var positions: Array[Vector2] = []
+	var elderly_members_left := 0
+	var elderly_member_index := 0
+	var elderly_group_anchor := Vector2.ZERO
+	var elderly_group_seed := 0
 	for index in crowd_count:
-		var spawn_position := _sample_crowd_position(rng, positions)
+		var tourist_type := "elderly" if elderly_members_left > 0 else _pick_tourist_type(rng)
+		var spawn_position: Vector2
+		var tourist_seed := rng.randi()
+		if tourist_type == "elderly":
+			var elderly_params: Dictionary = game_params.tourist_types.elderly
+			if elderly_members_left <= 0:
+				elderly_members_left = int(elderly_params.group_size)
+				elderly_member_index = 0
+				elderly_group_anchor = _sample_crowd_position(rng, positions)
+				elderly_group_seed = rng.randi()
+			spawn_position = _elderly_formation_position(elderly_group_anchor, elderly_member_index, int(elderly_params.group_size), float(elderly_params.formation_radius))
+			tourist_seed = elderly_group_seed
+			elderly_member_index += 1
+			elderly_members_left -= 1
+		else:
+			spawn_position = _sample_crowd_position(rng, positions)
 		positions.append(spawn_position)
 		var tourist := Tourist.new()
 		crowd_nodes.append(tourist)
 		tourist.position = spawn_position
-		tourist.setup(player, attraction_positions, rng.randi(), Rect2(80,110,2240,1580), _current_level().wall_rects(), game_params.get("tourist", {}))
+		tourist.setup(player, attraction_positions, tourist_seed, Rect2(80,110,2240,1580), _current_level().wall_rects(), game_params.tourist, tourist_type, game_params.tourist_types[tourist_type])
 		tourist.photographed.connect(_on_photographed)
 		add_child(tourist)
+
+func _elderly_formation_position(anchor: Vector2, member_index: int, group_size: int, radius: float) -> Vector2:
+	if member_index == 0:
+		return anchor
+	var angle := TAU * float(member_index - 1) / float(maxi(group_size - 1, 1))
+	var candidate := anchor + Vector2.from_angle(angle) * radius
+	if _inside_wall(candidate):
+		candidate = anchor + Vector2.from_angle(angle + PI) * radius * 0.6
+	return candidate
+
+func _pick_tourist_type(rng: RandomNumberGenerator) -> String:
+	var weights: Dictionary = game_params.crowd.type_weights
+	var total := 0.0
+	for weight in weights.values():
+		total += float(weight)
+	var roll := rng.randf() * total
+	for type_name: String in weights:
+		roll -= float(weights[type_name])
+		if roll <= 0.0:
+			return type_name
+	return "regular"
 
 func _sample_crowd_position(rng: RandomNumberGenerator, existing_positions: Array[Vector2]) -> Vector2:
 	var candidate := Vector2(start_position.x + start_exclusion_radius, start_position.y)
@@ -303,7 +350,7 @@ func _show_celebration_page() -> void:
 	page.add_child(heading)
 
 	var summary := Label.new()
-	summary.text = "Art visited: %d / %d\nCaught in photos: %d" % [_visited_count(), attractions.size(), exposures]
+	summary.text = "Art visited: %d / %d\nCamera exposures: %d" % [_visited_count(), attractions.size(), exposures]
 	summary.position = Vector2(0, 130)
 	summary.size = Vector2(view_size.x, 80)
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

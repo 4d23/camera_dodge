@@ -11,12 +11,18 @@
   },
   "artwork": { "view_duration": 2.0 },
   "crowd": {
-	"count": 18,
+	"count": 20,
 	"goal_density_bias": 2.0,
 	"minimum_spacing": 55.0,
 	"start_exclusion_radius": 125.0,
 	"artwork_exclusion_radius": 90.0,
-	"exit_exclusion_radius": 135.0
+	"exit_exclusion_radius": 135.0,
+	"type_weights": {
+	  "regular": 0.5,
+	  "kid": 0.35,
+	  "influencer": 0.05,
+	  "elderly": 0.1
+	}
   },
   "tourist": {
 	"view_radius": 200.0,
@@ -31,5 +37,38 @@
 	"cooldown_max": 2.5,
 	"wander_min": 1.2,
 	"wander_max": 3.5
+  },
+  "tourist_types": {
+	"regular": { "speed_multiplier": 1.0 },
+	"kid": {
+	  "speed_multiplier": 3.2,
+	  "takes_photos": false,
+	  "collision_radius": 34.0,
+	  "knockback_speed": 560.0,
+	  "knockback_duration": 0.22,
+	  "knockback_cooldown": 1.0
+	},
+	"influencer": {
+	  "speed_multiplier": 0.7,
+	  "takes_video": true,
+	  "video_hit_interval": 1.0,
+	  "view_radius": 260.0,
+	  "fov_degrees": 85.0
+	},
+	"elderly": {
+	  "speed_multiplier": 0.45,
+	  "group_size": 7,
+	  "formation_radius": 55.0,
+	  "aim_duration": 3.0,
+	  "initial_wander_min": 2.0,
+	  "initial_wander_max": 2.0,
+	  "wander_min": 2.0,
+	  "wander_max": 2.0,
+	  "cooldown_min": 3.0,
+	  "cooldown_max": 3.0,
+	  "view_radius": 180.0,
+	  "fov_degrees": 120.0,
+	  "synchronized": true
+	}
   }
 }

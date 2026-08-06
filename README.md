@@ -26,6 +26,8 @@ Under `Artworks`, select and drag an artwork. Its name, room, and texture are ed
 
 Gameplay tuning values are centralized in `res://config/game_params.json`. Edit this file to change player speed, artwork viewing duration, crowd density and spacing, tourist movement speed, camera radius/FOV, and camera timing.
 
+Tourists have four configurable archetypes: regular photographers, fast children that knock the player back, influencers with long selfie camera zones, and synchronized elderly tour groups that photograph the same artwork. Their spawn weights and behavior overrides are under `crowd.type_weights` and `tourist_types` in `game_params.json`.
+
 Under `Markers`, drag the entrance, exit, or stairs. The running game reads these scene positions automatically.
 
 ## Demo
