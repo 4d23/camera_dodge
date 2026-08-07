@@ -34,4 +34,5 @@
 6. ~Ability to hide behind structure to avoid being in the camera. Add poll / registration front desk etc~
 7. ~Child is able to dash towards you if you are too close and in the view point then some cd time. And will knock you over~
 8. ~Tourist group should be a straight line but they should follow the same path that the guide walk. So not always a straight line~
-9. Raytracing to get the proper cone
+9. ~Raytracing to get the proper cone~
+10. Rander when player reach the area to speed it up

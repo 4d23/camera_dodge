@@ -3,7 +3,7 @@ extends Node2D
 
 signal photographed
 
-enum CameraState { WANDER, AIM, FLASH, COOLDOWN }
+enum CameraState { TRAVEL, AIM, FLASH, COOLDOWN }
 
 var player: CharacterBody2D
 var attractions: PackedVector2Array
@@ -12,7 +12,7 @@ var walls: Array
 var velocity := Vector2.ZERO
 var desired_velocity := Vector2.ZERO
 var avoidance_timer := 0.0
-var state := CameraState.WANDER
+var state := CameraState.TRAVEL
 var timer := 0.0
 var aim_angle := 0.0
 var aim_target_angle := 0.0
@@ -36,7 +36,11 @@ var previous_group_member: Node2D
 var line_barrier: StaticBody2D
 var line_barrier_shape: RectangleShape2D
 var crowd: Array = []
-var wander_velocity := Vector2.ZERO
+var walking_speed := 0.0
+var destination := Vector2.ZERO
+var destination_index := -1
+var travel_photo_timer := 0.0
+var photo_at_destination := false
 var path_history: Array[Vector2] = []
 
 func setup(config: Dictionary) -> void:
@@ -60,14 +64,20 @@ func setup(config: Dictionary) -> void:
 		follow_wobble = Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(2.0, 7.0)
 		_build_line_barrier()
 	body_color = {"regular": Color("#5b6ee1"), "kid": Color("#ff8c42"), "influencer": Color("#ed5db1"), "elderly": Color("#758c72")}.get(tourist_type, Color("#5b6ee1"))
-	_choose_velocity()
+	walking_speed = rng.randf_range(_param("speed_min"), _param("speed_max")) * float(type_params.get("speed_multiplier", 1.0))
+	if tourist_type == "elderly" and not is_tour_guide and is_instance_valid(group_guide):
+		destination = group_guide.destination
+		destination_index = group_guide.destination_index
+	else:
+		_choose_destination()
+	travel_photo_timer = rng.randf_range(_param("travel_photo_min"), _param("travel_photo_max"))
 	if bool(type_params.get("takes_video", false)):
 		state = CameraState.AIM
 		_pick_camera_direction()
 		aim_angle = aim_target_angle
 		video_hit_timer = 0.0
 	else:
-		timer = rng.randf_range(_param("initial_wander_min"), _param("initial_wander_max"))
+		_set_travel_direction()
 	path_history.append(global_position)
 	queue_redraw()
 
@@ -89,19 +99,18 @@ func _physics_process(delta: float) -> void:
 		_check_kid_collision()
 	timer -= delta
 	match state:
-		CameraState.WANDER:
+		CameraState.TRAVEL:
 			if tourist_type == "elderly" and not is_tour_guide and is_instance_valid(group_guide):
 				_follow_guide(delta)
 			else:
-				_move_wandering(delta)
-			if timer <= 0.0 and bool(type_params.get("takes_photos", true)):
-				state = CameraState.AIM
-				_pick_camera_direction()
-				aim_angle = aim_target_angle
-				timer = _param("aim_duration")
+				_travel_to_destination(delta)
+			if state == CameraState.TRAVEL and bool(type_params.get("takes_photos", true)):
+				travel_photo_timer -= delta
+				if travel_photo_timer <= 0.0:
+					_start_photo(false)
 		CameraState.AIM:
 			if bool(type_params.get("takes_video", false)):
-				_move_wandering(delta)
+				_travel_to_destination(delta)
 				aim_retarget_timer -= delta
 				if aim_retarget_timer <= 0.0:
 					_pick_camera_direction()
@@ -121,27 +130,57 @@ func _physics_process(delta: float) -> void:
 				timer = rng.randf_range(_param("cooldown_min"), _param("cooldown_max"))
 		CameraState.COOLDOWN:
 			if timer <= 0.0:
-				state = CameraState.WANDER
-				_choose_velocity()
-				timer = rng.randf_range(_param("wander_min"), _param("wander_max"))
+				if photo_at_destination:
+					_choose_destination()
+				photo_at_destination = false
+				state = CameraState.TRAVEL
+				travel_photo_timer = rng.randf_range(_param("travel_photo_min"), _param("travel_photo_max"))
+				_set_travel_direction()
 	if line_barrier != null:
 		_update_line_barrier()
 	_record_path_point()
 	queue_redraw()
 
-func _choose_velocity() -> void:
-	var multiplier := float(type_params.get("speed_multiplier", 1.0))
-	wander_velocity = Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(_param("speed_min"), _param("speed_max")) * multiplier
-	desired_velocity = wander_velocity
+func _set_travel_direction() -> void:
+	if global_position.distance_squared_to(destination) > 1.0:
+		desired_velocity = global_position.direction_to(destination) * walking_speed
 	if velocity.length_squared() < 1.0:
 		velocity = desired_velocity
 
-func _move_wandering(delta: float) -> void:
+func _travel_to_destination(delta: float) -> void:
+	if global_position.distance_to(destination) <= _param("destination_arrival_radius"):
+		if bool(type_params.get("takes_video", false)) or not bool(type_params.get("takes_photos", true)):
+			_choose_destination()
+			_set_travel_direction()
+		else:
+			_start_photo(true)
+		return
 	if avoidance_timer <= 0.0:
-		desired_velocity = wander_velocity + _separation_force()
-		if desired_velocity.length() > wander_velocity.length():
-			desired_velocity = desired_velocity.normalized() * wander_velocity.length()
+		desired_velocity = global_position.direction_to(destination) * walking_speed + _separation_force()
+		if desired_velocity.length() > walking_speed:
+			desired_velocity = desired_velocity.normalized() * walking_speed
 	_move_with_current_velocity(delta)
+
+func _choose_destination() -> void:
+	if attractions.is_empty():
+		destination = global_position
+		destination_index = -1
+		return
+	var choices: Array[int] = []
+	for index in attractions.size():
+		if attractions.size() == 1 or index != destination_index:
+			choices.append(index)
+	destination_index = choices[rng.randi_range(0, choices.size() - 1)]
+	destination = attractions[destination_index]
+
+func _start_photo(at_destination: bool) -> void:
+	photo_at_destination = at_destination
+	state = CameraState.AIM
+	desired_velocity = Vector2.ZERO
+	velocity = Vector2.ZERO
+	_pick_camera_direction()
+	aim_angle = aim_target_angle
+	timer = _param("aim_duration")
 
 func _move_with_current_velocity(delta: float) -> void:
 	var target_speed := desired_velocity.length()
@@ -274,7 +313,7 @@ func _try_start_kid_dash() -> void:
 	var to_player := player.global_position - global_position
 	if to_player.length() <= float(type_params.collision_radius) or to_player.length() > float(type_params.dash_detection_radius):
 		return
-	var facing := velocity.normalized() if velocity.length_squared() > 1.0 else wander_velocity.normalized()
+	var facing := velocity.normalized() if velocity.length_squared() > 1.0 else desired_velocity.normalized()
 	if facing.length_squared() < 0.5:
 		return
 	var half_fov := deg_to_rad(float(type_params.dash_fov_degrees) * 0.5)
@@ -310,7 +349,8 @@ func _closest_attraction() -> Vector2:
 	return closest
 
 func _pick_camera_direction() -> void:
-	var artwork_direction := global_position.direction_to(_closest_attraction())
+	var artwork_target := destination if destination_index >= 0 else _closest_attraction()
+	var artwork_direction := global_position.direction_to(artwork_target)
 	if artwork_direction.length_squared() < 0.5:
 		artwork_direction = Vector2.RIGHT
 	var random_direction := Vector2.from_angle(rng.randf_range(0.0, TAU))
@@ -380,7 +420,7 @@ func _draw() -> void:
 		draw_polyline(outline, color.lightened(0.35), 2.0)
 	draw_circle(Vector2.ZERO, 16.0, body_color)
 	draw_circle(Vector2(0, -15), 9.0, Color("#f2c6a0"))
-	var camera_direction := Vector2.from_angle(aim_angle if state != CameraState.WANDER else velocity.angle())
+	var camera_direction := Vector2.from_angle(aim_angle if state != CameraState.TRAVEL else velocity.angle())
 	draw_line(camera_direction * 7.0, camera_direction * 21.0, Color("#222536"), 7.0)
 	var type_label: String = {"kid": "KID", "influencer": "LIVE", "elderly": "GROUP"}.get(tourist_type, "")
 	if is_tour_guide:
