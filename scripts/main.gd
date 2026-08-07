@@ -85,6 +85,13 @@ func _load_game_params() -> bool:
 	artwork_density_bias = float(crowd.artwork_density_bias)
 	minimum_crowd_spacing = float(crowd.minimum_spacing)
 	start_exclusion_radius = float(crowd.start_exclusion_radius)
+	# The entrance must begin outside every camera and child detection range,
+	# even if a smaller exclusion is accidentally configured later.
+	var longest_initial_range := float(game_params.tourist.view_radius)
+	for type_config in game_params.tourist_types.values():
+		longest_initial_range = maxf(longest_initial_range, float(type_config.get("view_radius", 0.0)))
+		longest_initial_range = maxf(longest_initial_range, float(type_config.get("dash_detection_radius", 0.0)))
+	start_exclusion_radius = maxf(start_exclusion_radius, longest_initial_range + 40.0)
 	attraction_exclusion_radius = float(crowd.artwork_exclusion_radius)
 	exit_exclusion_radius = float(crowd.exit_exclusion_radius)
 	return true

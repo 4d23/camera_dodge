@@ -16,7 +16,7 @@
 	"minimum_regular_photographers": 3,
 	"artwork_density_bias": 2.0,
 	"minimum_spacing": 55.0,
-	"start_exclusion_radius": 125.0,
+	"start_exclusion_radius": 300.0,
 	"artwork_exclusion_radius": 90.0,
 	"exit_exclusion_radius": 135.0,
 	"type_weights": {

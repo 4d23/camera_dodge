@@ -30,6 +30,8 @@ Tourists have four configurable archetypes: regular photographers, fast children
 
 Artwork travel uses a shared A* grid per floor. `tourist.pathfinding_cell_size` controls route resolution, while `tourist.pathfinding_clearance` controls how far planned paths stay from walls and cover.
 
+`crowd.start_exclusion_radius` defines the safe entrance area. At runtime it is automatically increased when necessary so it remains larger than every camera and child detection range.
+
 Set `crowd.seed` to a non-negative integer for a reproducible crowd layout, which is useful when tuning or reproducing bugs. Keep it at `-1` for a different layout each run.
 
 `crowd.minimum_regular_photographers` guarantees that every floor retains some still photographers even when a large elderly group consumes much of the crowd budget.
