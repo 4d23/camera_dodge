@@ -26,7 +26,21 @@ Under `Artworks`, select and drag an artwork. Its name, room, and texture are ed
 
 Gameplay tuning values are centralized in `res://config/game_params.json`. Edit this file to change player speed, artwork viewing duration, crowd density and spacing, tourist movement speed, camera radius/FOV, and camera timing.
 
-Tourists have four configurable archetypes: regular photographers, fast children that knock the player back, influencers with long selfie camera zones, and synchronized elderly tour groups that photograph the same artwork. Their spawn weights and behavior overrides are under `crowd.type_weights` and `tourist_types` in `game_params.json`.
+Tourists have four configurable archetypes: regular photographers, fast children that knock the player back, influencers with long selfie camera zones, and elderly groups that follow a flag-carrying guide. They roam with smooth wall steering and avoid nearby visitors; photographers periodically aim toward nearby artwork. Their spawn weights and behavior overrides are under `crowd.type_weights` and `tourist_types` in `game_params.json`.
+
+Set `crowd.seed` to a non-negative integer for a reproducible crowd layout, which is useful when tuning or reproducing bugs. Keep it at `-1` for a different layout each run.
+
+`crowd.minimum_regular_photographers` guarantees that every floor retains some still photographers even when a large elderly group consumes much of the crowd budget.
+
+## Tests
+
+Run the automated gameplay suite headlessly:
+
+```bash
+godot --headless --path . --log-file ./godot-tests.log --script res://tests/test_runner.gd
+```
+
+Pull requests run the same suite through GitHub Actions.
 
 Under `Markers`, drag the entrance, exit, or stairs. The running game reads these scene positions automatically.
 

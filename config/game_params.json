@@ -12,6 +12,8 @@
   "artwork": { "view_duration": 2.0 },
   "crowd": {
 	"count": 20,
+	"seed": -1,
+	"minimum_regular_photographers": 3,
 	"goal_density_bias": 2.0,
 	"minimum_spacing": 55.0,
 	"start_exclusion_radius": 125.0,
@@ -29,6 +31,8 @@
 	"fov_degrees": 100.0,
 	"speed_min": 28.0,
 	"speed_max": 52.0,
+	"separation_radius": 42.0,
+	"separation_strength": 34.0,
 	"initial_wander_min": 1.0,
 	"initial_wander_max": 3.2,
 	"aim_duration": 1.25,
@@ -59,7 +63,6 @@
 	  "speed_multiplier": 0.7,
 	  "group_size": 10,
 	  "takes_photos": false,
-	  "formation_radius": 100.0,
 	  "aim_duration": 3.0,
 	  "initial_wander_min": 2.0,
 	  "initial_wander_max": 2.0,
@@ -68,8 +71,7 @@
 	  "cooldown_min": 3.0,
 	  "cooldown_max": 3.0,
 	  "view_radius": 180.0,
-	  "fov_degrees": 120.0,
-	  "synchronized": true
+	  "fov_degrees": 120.0
 	}
   }
 }

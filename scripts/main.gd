@@ -61,7 +61,7 @@ func _load_game_params() -> bool:
 		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
 		"artwork": ["view_duration"],
 		"crowd": ["count", "goal_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
-		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "initial_wander_min", "initial_wander_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max", "wander_min", "wander_max"]
+		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "initial_wander_min", "initial_wander_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max", "wander_min", "wander_max"]
 	}
 	for section_name: String in required:
 		if not game_params.has(section_name) or not game_params[section_name] is Dictionary:
@@ -160,7 +160,12 @@ func _build_ui() -> void:
 
 func _spawn_crowd() -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.randomize()
+	var configured_seed := int(game_params.crowd.get("seed", -1))
+	if configured_seed >= 0:
+		# Offset by floor so each floor is reproducible but visually distinct.
+		rng.seed = configured_seed + current_floor
+	else:
+		rng.randomize()
 	var attraction_positions := PackedVector2Array()
 	for attraction in attractions:
 		if attraction.floor == current_floor:
@@ -173,10 +178,15 @@ func _spawn_crowd() -> void:
 	var elderly_group_seed := 0
 	var elderly_guide: CameraTourist
 	var elderly_previous_member: CameraTourist
+	var regulars_spawned := 0
+	var minimum_regulars := int(game_params.crowd.get("minimum_regular_photographers", 0))
 	for index in crowd_count:
 		var elderly_group_size := int(game_params.tourist_types.elderly.group_size)
-		var has_room_for_full_group := crowd_count - index >= elderly_group_size
-		var tourist_type := "elderly" if elderly_members_left > 0 else _pick_tourist_type(rng, has_room_for_full_group)
+		var remaining_slots := crowd_count - index
+		var regulars_needed := maxi(minimum_regulars - regulars_spawned, 0)
+		var has_room_for_full_group := remaining_slots - elderly_group_size >= regulars_needed
+		var must_spawn_regular := elderly_members_left <= 0 and remaining_slots <= regulars_needed
+		var tourist_type := "elderly" if elderly_members_left > 0 else ("regular" if must_spawn_regular else _pick_tourist_type(rng, has_room_for_full_group))
 		var spawn_position: Vector2
 		var tourist_seed := rng.randi()
 		if tourist_type == "elderly":
@@ -194,15 +204,28 @@ func _spawn_crowd() -> void:
 			elderly_members_left -= 1
 		else:
 			spawn_position = _sample_crowd_position(rng, positions)
+		if tourist_type == "regular":
+			regulars_spawned += 1
 		positions.append(spawn_position)
 		var tourist := Tourist.new()
 		crowd_nodes.append(tourist)
 		tourist.position = spawn_position
 		var is_tour_guide := tourist_type == "elderly" and elderly_member_index == 1
-		var formation_offset := spawn_position - elderly_group_anchor if tourist_type == "elderly" else Vector2.ZERO
-		var group_slot := elderly_member_index - 1 if tourist_type == "elderly" else 0
-		var group_size := int(game_params.tourist_types.elderly.group_size) if tourist_type == "elderly" else 1
-		tourist.setup(player, attraction_positions, tourist_seed, Rect2(80,110,2240,1580), _current_level().wall_rects(), game_params.tourist, tourist_type, game_params.tourist_types[tourist_type], is_tour_guide, elderly_guide, formation_offset, group_slot, group_size, elderly_previous_member)
+		var spawn_config := {
+			"player": player,
+			"attractions": attraction_positions,
+			"seed": tourist_seed,
+			"bounds": Rect2(80, 110, 2240, 1580),
+			"walls": _current_level().wall_rects(),
+			"params": game_params.tourist,
+			"archetype": tourist_type,
+			"type_params": game_params.tourist_types[tourist_type],
+			"is_tour_guide": is_tour_guide,
+			"group_guide": elderly_guide,
+			"previous_group_member": elderly_previous_member,
+			"crowd": crowd_nodes
+		}
+		tourist.setup(spawn_config)
 		if is_tour_guide:
 			elderly_guide = tourist
 			elderly_previous_member = tourist

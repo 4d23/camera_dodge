@@ -26,31 +26,29 @@ var collision_cooldown := 0.0
 var video_hit_timer := 0.0
 var is_tour_guide := false
 var group_guide: Node2D
-var formation_offset := Vector2.ZERO
 var follow_wobble := Vector2.ZERO
-var group_slot := 0
-var group_size := 1
 var previous_group_member: Node2D
 var line_barrier: StaticBody2D
 var line_barrier_shape: RectangleShape2D
+var crowd: Array = []
+var wander_velocity := Vector2.ZERO
+var path_history: Array[Vector2] = []
 
-func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, seed_value: int, movement_bounds := Rect2(55, 105, 1042, 485), blocking_walls: Array = [], tourist_params: Dictionary = {}, archetype := "regular", archetype_params: Dictionary = {}, guide := false, guide_node: Node2D = null, group_offset := Vector2.ZERO, slot := 0, member_count := 1, previous_member: Node2D = null) -> void:
-	player = target
-	attractions = attraction_positions
-	bounds = movement_bounds
-	walls = blocking_walls
-	params = tourist_params
-	tourist_type = archetype
-	type_params = archetype_params
-	is_tour_guide = guide
-	group_guide = guide_node
-	formation_offset = group_offset
-	group_slot = slot
-	group_size = member_count
-	previous_group_member = previous_member
+func setup(config: Dictionary) -> void:
+	player = config.player
+	attractions = config.attractions
+	bounds = config.get("bounds", bounds)
+	walls = config.get("walls", [])
+	params = config.get("params", {})
+	tourist_type = config.get("archetype", "regular")
+	type_params = config.get("type_params", {})
+	is_tour_guide = config.get("is_tour_guide", false)
+	group_guide = config.get("group_guide")
+	previous_group_member = config.get("previous_group_member")
+	crowd = config.get("crowd", [])
 	view_radius = _param("view_radius")
 	fov_degrees = _param("fov_degrees")
-	rng.seed = seed_value
+	rng.seed = int(config.get("seed", 0))
 	if tourist_type == "elderly" and not is_tour_guide:
 		# Each follower keeps an imperfect place in the group instead of
 		# marching in an exact formation.
@@ -64,6 +62,7 @@ func setup(target: CharacterBody2D, attraction_positions: PackedVector2Array, se
 		video_hit_timer = 0.0
 	else:
 		timer = rng.randf_range(_param("initial_wander_min"), _param("initial_wander_max"))
+	path_history.append(global_position)
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
@@ -79,14 +78,14 @@ func _physics_process(delta: float) -> void:
 			if tourist_type == "elderly" and not is_tour_guide and is_instance_valid(group_guide):
 				_follow_guide(delta)
 			else:
-				_move_with_current_velocity(delta)
+				_move_wandering(delta)
 			if timer <= 0.0 and bool(type_params.get("takes_photos", true)):
 				state = CameraState.AIM
 				aim_angle = global_position.angle_to_point(_closest_attraction())
 				timer = _param("aim_duration")
 		CameraState.AIM:
 			if bool(type_params.get("takes_video", false)):
-				_move_with_current_velocity(delta)
+				_move_wandering(delta)
 				aim_angle = global_position.angle_to_point(_closest_attraction())
 				video_hit_timer = maxf(video_hit_timer - delta, 0.0)
 				if video_hit_timer <= 0.0 and _player_is_in_frame():
@@ -108,13 +107,22 @@ func _physics_process(delta: float) -> void:
 				timer = rng.randf_range(_param("wander_min"), _param("wander_max"))
 	if line_barrier != null:
 		_update_line_barrier()
+	_record_path_point()
 	queue_redraw()
 
 func _choose_velocity() -> void:
 	var multiplier := float(type_params.get("speed_multiplier", 1.0))
-	desired_velocity = Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(_param("speed_min"), _param("speed_max")) * multiplier
+	wander_velocity = Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(_param("speed_min"), _param("speed_max")) * multiplier
+	desired_velocity = wander_velocity
 	if velocity.length_squared() < 1.0:
 		velocity = desired_velocity
+
+func _move_wandering(delta: float) -> void:
+	if avoidance_timer <= 0.0:
+		desired_velocity = wander_velocity + _separation_force()
+		if desired_velocity.length() > wander_velocity.length():
+			desired_velocity = desired_velocity.normalized() * wander_velocity.length()
+	_move_with_current_velocity(delta)
 
 func _move_with_current_velocity(delta: float) -> void:
 	var target_speed := desired_velocity.length()
@@ -149,18 +157,67 @@ func _choose_wall_detour() -> void:
 	avoidance_timer = 0.8
 
 func _follow_guide(delta: float) -> void:
-	var guide_velocity: Vector2 = group_guide.velocity
-	var facing := guide_velocity.angle() if guide_velocity.length_squared() > 1.0 else 0.0
-	var target := group_guide.global_position + _moving_formation_offset().rotated(facing) + follow_wobble
+	if not is_instance_valid(previous_group_member):
+		return
+	# Follow the actual trail of the person ahead. Each link in the chain uses
+	# the same rule, so turns ripple naturally down the group.
+	var target := _path_target_behind(previous_group_member, 36.0)
+	var predecessor_velocity: Vector2 = previous_group_member.velocity
+	if predecessor_velocity.length_squared() > 1.0:
+		target += follow_wobble.project(predecessor_velocity.orthogonal().normalized())
 	var distance := global_position.distance_to(target)
-	var desired_speed := clampf(distance * 1.8, 12.0, _param("speed_max") * 1.35)
-	if avoidance_timer <= 0.0:
-		desired_velocity = global_position.direction_to(target) * desired_speed
-	_move_with_current_velocity(delta)
+	if distance > 7.0:
+		var follow_speed := clampf(distance * 1.8, 12.0, _param("speed_max") * 1.35)
+		if avoidance_timer <= 0.0:
+			desired_velocity = global_position.direction_to(target) * follow_speed + _separation_force()
+			if desired_velocity.length() > follow_speed:
+				desired_velocity = desired_velocity.normalized() * follow_speed
+		_move_with_current_velocity(delta)
+	else:
+		desired_velocity = Vector2.ZERO
+		velocity = velocity.move_toward(Vector2.ZERO, delta * 70.0)
 
-func _moving_formation_offset() -> Vector2:
-	# Single-file queue behind the guide. A small sideways wobble keeps it organic.
-	return Vector2(-group_slot * 36.0, 0.0)
+func _record_path_point() -> void:
+	if tourist_type != "elderly":
+		return
+	if path_history.is_empty() or path_history.back().distance_to(global_position) >= 4.0:
+		path_history.append(global_position)
+		if path_history.size() > 160:
+			path_history.pop_front()
+
+func _path_target_behind(member: CameraTourist, follow_distance: float) -> Vector2:
+	if member.path_history.size() < 2:
+		return global_position
+	var remaining := follow_distance
+	for index in range(member.path_history.size() - 1, 0, -1):
+		var newest := member.path_history[index]
+		var older := member.path_history[index - 1]
+		var segment_length := newest.distance_to(older)
+		if segment_length >= remaining and segment_length > 0.0:
+			return newest.lerp(older, remaining / segment_length)
+		remaining -= segment_length
+	# Hold position until the predecessor has recorded enough path. This avoids
+	# the group collapsing together immediately after spawning.
+	return global_position
+
+func _separation_force() -> Vector2:
+	var radius := _param("separation_radius")
+	var force := Vector2.ZERO
+	for other in crowd:
+		if other == self or not is_instance_valid(other) or _same_tour_group(other):
+			continue
+		var offset: Vector2 = global_position - other.global_position
+		var distance := offset.length()
+		if distance > 0.01 and distance < radius:
+			force += offset / distance * (1.0 - distance / radius)
+	return force * _param("separation_strength")
+
+func _same_tour_group(other: Node) -> bool:
+	if tourist_type != "elderly" or other.tourist_type != "elderly":
+		return false
+	var my_guide: Node = self if is_tour_guide else group_guide
+	var their_guide: Node = other if other.is_tour_guide else other.group_guide
+	return is_instance_valid(my_guide) and my_guide == their_guide
 
 func _build_line_barrier() -> void:
 	line_barrier = StaticBody2D.new()
@@ -193,9 +250,8 @@ func _check_kid_collision() -> void:
 		collision_cooldown = float(type_params.knockback_cooldown)
 
 func _closest_attraction() -> Vector2:
-	# Elderly tour groups synchronize around the same featured artwork.
-	if tourist_type == "elderly" and bool(type_params.get("synchronized", false)):
-		return attractions[0]
+	if attractions.is_empty():
+		return global_position
 	var closest := attractions[0]
 	var closest_distance := global_position.distance_squared_to(closest)
 	for attraction in attractions:
