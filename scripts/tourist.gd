@@ -349,6 +349,21 @@ func _view_blocked() -> bool:
 			return true
 	return false
 
+func _camera_ray_endpoint(ray_angle: float) -> Vector2:
+	var ray_start := global_position
+	var ray_end := ray_start + Vector2.from_angle(ray_angle) * view_radius
+	var nearest_distance := view_radius
+	for wall: Rect2 in walls:
+		var top_left := wall.position
+		var top_right := Vector2(wall.end.x, wall.position.y)
+		var bottom_right := wall.end
+		var bottom_left := Vector2(wall.position.x, wall.end.y)
+		for edge in [[top_left, top_right], [top_right, bottom_right], [bottom_right, bottom_left], [bottom_left, top_left]]:
+			var intersection = Geometry2D.segment_intersects_segment(ray_start, ray_end, edge[0], edge[1])
+			if intersection != null:
+				nearest_distance = minf(nearest_distance, ray_start.distance_to(intersection))
+	return Vector2.from_angle(ray_angle) * nearest_distance
+
 func _draw() -> void:
 	if state == CameraState.AIM or state == CameraState.FLASH:
 		var is_video := bool(type_params.get("takes_video", false)) and state == CameraState.AIM
@@ -358,7 +373,7 @@ func _draw() -> void:
 		var arc_segments := 24
 		for index in range(arc_segments + 1):
 			var arc_angle := aim_angle - half_fov + (half_fov * 2.0 * index / arc_segments)
-			points.append(Vector2.from_angle(arc_angle) * view_radius)
+			points.append(_camera_ray_endpoint(arc_angle))
 		draw_colored_polygon(points, color)
 		var outline := points.duplicate()
 		outline.append(points[0])

@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://cll0xg83qyvf8" path="res://assets/artworks/dying_slave.jpg" id="6"]
 [ext_resource type="Texture2D" uid="uid://d0s5a8jls01nw" path="res://assets/artworks/venus_de_milo.jpg" id="7"]
 [ext_resource type="Script" uid="uid://dhsxyl2l11jdj" path="res://scripts/location_marker.gd" id="8"]
-[ext_resource type="Texture2D" path="res://assets/artworks/great_sphinx_of_tanis.jpg" id="8_tfamw"]
+[ext_resource type="Texture2D" uid="uid://q2tv6qxl3k6d" path="res://assets/artworks/great_sphinx_of_tanis.jpg" id="8_tfamw"]
 
 [node name="Level0" type="Node2D" unique_id=235238859]
 script = ExtResource("1")
@@ -90,26 +90,38 @@ position = Vector2(2140, 1275)
 script = ExtResource("2")
 wall_size = Vector2(360, 30)
 
-[node name="RegistrationDesk" type="StaticBody2D" parent="Walls"]
-position = Vector2(350, 900)
+[node name="RegistrationDesk" type="StaticBody2D" parent="Walls" unique_id=1658629658]
+position = Vector2(262, 655)
 script = ExtResource("2")
 wall_size = Vector2(190, 72)
 structure_type = "registration_desk"
 
-[node name="InformationKiosk" type="StaticBody2D" parent="Walls"]
+[node name="InformationKiosk" type="StaticBody2D" parent="Walls" unique_id=1186744758]
 position = Vector2(1110, 900)
 script = ExtResource("2")
 wall_size = Vector2(76, 76)
 structure_type = "information_kiosk"
 
-[node name="GalleryColumn01" type="StaticBody2D" parent="Walls"]
+[node name="GalleryColumn01" type="StaticBody2D" parent="Walls" unique_id=314188095]
 position = Vector2(1740, 810)
 script = ExtResource("2")
 wall_size = Vector2(82, 82)
 structure_type = "column"
 
-[node name="GalleryColumn02" type="StaticBody2D" parent="Walls"]
+[node name="GalleryColumn02" type="StaticBody2D" parent="Walls" unique_id=168924313]
 position = Vector2(2020, 1080)
+script = ExtResource("2")
+wall_size = Vector2(82, 82)
+structure_type = "column"
+
+[node name="GalleryColumn02" type="StaticBody2D" parent="Walls/GalleryColumn02" unique_id=1125062553]
+position = Vector2(2020, 1080)
+script = ExtResource("2")
+wall_size = Vector2(82, 82)
+structure_type = "column"
+
+[node name="GalleryColumn03" type="StaticBody2D" parent="Walls/GalleryColumn02" unique_id=756348555]
+position = Vector2(-514, 252)
 script = ExtResource("2")
 wall_size = Vector2(82, 82)
 structure_type = "column"

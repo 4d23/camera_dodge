@@ -33,7 +33,7 @@
 	"speed_max": 52.0,
 	"separation_radius": 42.0,
 	"separation_strength": 34.0,
-	"artwork_aim_bias": 0.2,
+	"artwork_aim_bias": 0.3,
 	"aim_jitter_degrees": 20.0,
 	"aim_retarget_min": 1.5,
 	"aim_retarget_max": 3.0,
