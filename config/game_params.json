@@ -11,7 +11,7 @@
   },
   "artwork": { "view_duration": 2.0 },
   "crowd": {
-	"tourists_per_100k_pixels": 0.75,
+	"tourists_per_100k_pixels": 1.0,
 	"seed": -1,
 	"minimum_regular_photographers": 3,
 	"artwork_density_bias": 2.0,
@@ -38,6 +38,8 @@
 	"aim_retarget_min": 1.5,
 	"aim_retarget_max": 3.0,
 	"destination_arrival_radius": 70.0,
+	"pathfinding_cell_size": 32.0,
+	"pathfinding_clearance": 26.0,
 	"travel_photo_min": 3.0,
 	"travel_photo_max": 6.5,
 	"aim_duration": 1.25,

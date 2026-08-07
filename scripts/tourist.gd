@@ -42,6 +42,9 @@ var destination_index := -1
 var travel_photo_timer := 0.0
 var photo_at_destination := false
 var path_history: Array[Vector2] = []
+var navigation: AStarGrid2D
+var travel_path := PackedVector2Array()
+var travel_path_index := 0
 
 func setup(config: Dictionary) -> void:
 	player = config.player
@@ -55,6 +58,7 @@ func setup(config: Dictionary) -> void:
 	group_guide = config.get("group_guide")
 	previous_group_member = config.get("previous_group_member")
 	crowd = config.get("crowd", [])
+	navigation = config.get("navigation")
 	view_radius = _param("view_radius")
 	fov_degrees = _param("fov_degrees")
 	rng.seed = int(config.get("seed", 0))
@@ -142,8 +146,9 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 func _set_travel_direction() -> void:
-	if global_position.distance_squared_to(destination) > 1.0:
-		desired_velocity = global_position.direction_to(destination) * walking_speed
+	var target := _current_travel_target()
+	if global_position.distance_squared_to(target) > 1.0:
+		desired_velocity = global_position.direction_to(target) * walking_speed
 	if velocity.length_squared() < 1.0:
 		velocity = desired_velocity
 
@@ -155,8 +160,11 @@ func _travel_to_destination(delta: float) -> void:
 		else:
 			_start_photo(true)
 		return
+	while travel_path_index < travel_path.size() and global_position.distance_to(travel_path[travel_path_index]) <= 22.0:
+		travel_path_index += 1
+	var travel_target := _current_travel_target()
 	if avoidance_timer <= 0.0:
-		desired_velocity = global_position.direction_to(destination) * walking_speed + _separation_force()
+		desired_velocity = global_position.direction_to(travel_target) * walking_speed + _separation_force()
 		if desired_velocity.length() > walking_speed:
 			desired_velocity = desired_velocity.normalized() * walking_speed
 	_move_with_current_velocity(delta)
@@ -172,6 +180,43 @@ func _choose_destination() -> void:
 			choices.append(index)
 	destination_index = choices[rng.randi_range(0, choices.size() - 1)]
 	destination = attractions[destination_index]
+	_plan_path_to_destination()
+
+func _plan_path_to_destination() -> void:
+	travel_path.clear()
+	travel_path_index = 0
+	if navigation == null:
+		return
+	var start_cell := _nearest_walkable_cell(_navigation_cell_for(global_position))
+	var destination_cell := _nearest_walkable_cell(_navigation_cell_for(destination))
+	if start_cell == Vector2i(-1, -1) or destination_cell == Vector2i(-1, -1):
+		return
+	travel_path = navigation.get_point_path(start_cell, destination_cell)
+	if travel_path.size() > 0:
+		travel_path_index = 1
+
+func _navigation_cell_for(world_point: Vector2) -> Vector2i:
+	var relative := world_point - navigation.offset
+	var cell := Vector2i(roundi(relative.x / navigation.cell_size.x), roundi(relative.y / navigation.cell_size.y))
+	cell.x = clampi(cell.x, navigation.region.position.x, navigation.region.end.x - 1)
+	cell.y = clampi(cell.y, navigation.region.position.y, navigation.region.end.y - 1)
+	return cell
+
+func _nearest_walkable_cell(origin: Vector2i) -> Vector2i:
+	if navigation.is_in_boundsv(origin) and not navigation.is_point_solid(origin):
+		return origin
+	for radius in range(1, 6):
+		for x in range(origin.x - radius, origin.x + radius + 1):
+			for y in range(origin.y - radius, origin.y + radius + 1):
+				var candidate := Vector2i(x, y)
+				if navigation.is_in_boundsv(candidate) and not navigation.is_point_solid(candidate):
+					return candidate
+	return Vector2i(-1, -1)
+
+func _current_travel_target() -> Vector2:
+	if travel_path_index < travel_path.size():
+		return travel_path[travel_path_index]
+	return destination
 
 func _start_photo(at_destination: bool) -> void:
 	photo_at_destination = at_destination

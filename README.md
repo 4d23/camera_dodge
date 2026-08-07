@@ -28,6 +28,8 @@ Gameplay tuning values are centralized in `res://config/game_params.json`. Edit 
 
 Tourists have four configurable archetypes: regular photographers, fast children that knock the player back, influencers with long selfie camera zones, and elderly groups that follow a flag-carrying guide. They spawn around the floor, travel between artworks with smooth wall steering, and avoid nearby visitors. Regular photographers take pictures both along the route and after reaching an artwork. Their spawn weights and behavior overrides are under `crowd.type_weights` and `tourist_types` in `game_params.json`.
 
+Artwork travel uses a shared A* grid per floor. `tourist.pathfinding_cell_size` controls route resolution, while `tourist.pathfinding_clearance` controls how far planned paths stay from walls and cover.
+
 Set `crowd.seed` to a non-negative integer for a reproducible crowd layout, which is useful when tuning or reproducing bugs. Keep it at `-1` for a different layout each run.
 
 `crowd.minimum_regular_photographers` guarantees that every floor retains some still photographers even when a large elderly group consumes much of the crowd budget.

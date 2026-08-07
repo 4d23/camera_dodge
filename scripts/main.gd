@@ -32,6 +32,7 @@ var floor_label: Label
 var current_floor := 0
 var stair_cooldown := 0.0
 var crowd_nodes: Array[Node] = []
+var tourist_navigation: AStarGrid2D
 
 func _ready() -> void:
 	view_size = get_viewport_rect().size
@@ -61,7 +62,7 @@ func _load_game_params() -> bool:
 		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
 		"artwork": ["view_duration"],
 		"crowd": ["tourists_per_100k_pixels", "artwork_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
-		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "artwork_aim_bias", "aim_jitter_degrees", "aim_retarget_min", "aim_retarget_max", "destination_arrival_radius", "travel_photo_min", "travel_photo_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max"]
+		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "artwork_aim_bias", "aim_jitter_degrees", "aim_retarget_min", "aim_retarget_max", "destination_arrival_radius", "pathfinding_cell_size", "pathfinding_clearance", "travel_photo_min", "travel_photo_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max"]
 	}
 	for section_name: String in required:
 		if not game_params.has(section_name) or not game_params[section_name] is Dictionary:
@@ -159,6 +160,7 @@ func _build_ui() -> void:
 
 func _spawn_crowd() -> void:
 	crowd_count = _crowd_count_for_current_floor()
+	tourist_navigation = _build_tourist_navigation()
 	var rng := RandomNumberGenerator.new()
 	var configured_seed := int(game_params.crowd.get("seed", -1))
 	if configured_seed >= 0:
@@ -224,7 +226,8 @@ func _spawn_crowd() -> void:
 			"is_tour_guide": is_tour_guide,
 			"group_guide": elderly_guide,
 			"previous_group_member": elderly_previous_member,
-			"crowd": crowd_nodes
+			"crowd": crowd_nodes,
+			"navigation": tourist_navigation
 		}
 		tourist.setup(spawn_config)
 		if is_tour_guide:
@@ -243,6 +246,27 @@ func _crowd_count_for_current_floor() -> int:
 		usable_area -= covered_area.size.x * covered_area.size.y
 	var density := float(game_params.crowd.tourists_per_100k_pixels)
 	return maxi(roundi(maxf(usable_area, 0.0) / 100000.0 * density), 0)
+
+func _build_tourist_navigation() -> AStarGrid2D:
+	var movement_area := Rect2(80, 110, 2240, 1580)
+	var cell_size := float(game_params.tourist.pathfinding_cell_size)
+	var grid := AStarGrid2D.new()
+	grid.region = Rect2i(0, 0, ceili(movement_area.size.x / cell_size), ceili(movement_area.size.y / cell_size))
+	grid.cell_size = Vector2(cell_size, cell_size)
+	grid.offset = movement_area.position + Vector2.ONE * cell_size * 0.5
+	grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	grid.update()
+	var clearance := float(game_params.tourist.pathfinding_clearance)
+	var walls := _current_level().wall_rects()
+	for x in grid.region.size.x:
+		for y in grid.region.size.y:
+			var cell := Vector2i(x, y)
+			var point := grid.get_point_position(cell)
+			for wall: Rect2 in walls:
+				if wall.grow(clearance).has_point(point):
+					grid.set_point_solid(cell)
+					break
+	return grid
 
 func _sample_elderly_group_size(rng: RandomNumberGenerator, elderly_params: Dictionary, available_slots: int) -> int:
 	var mean := float(elderly_params.group_size)
