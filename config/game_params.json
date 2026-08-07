@@ -11,10 +11,10 @@
   },
   "artwork": { "view_duration": 2.0 },
   "crowd": {
-	"count": 20,
+	"tourists_per_100k_pixels": 0.75,
 	"seed": -1,
 	"minimum_regular_photographers": 3,
-	"goal_density_bias": 2.0,
+	"artwork_density_bias": 2.0,
 	"minimum_spacing": 55.0,
 	"start_exclusion_radius": 125.0,
 	"artwork_exclusion_radius": 90.0,

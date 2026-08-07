@@ -32,6 +32,8 @@ Set `crowd.seed` to a non-negative integer for a reproducible crowd layout, whic
 
 `crowd.minimum_regular_photographers` guarantees that every floor retains some still photographers even when a large elderly group consumes much of the crowd budget.
 
+Crowd size is calculated from usable floor area using `crowd.tourists_per_100k_pixels`; walls, desks, kiosks, and columns reduce that area. `crowd.artwork_density_bias` controls how strongly initial tourist placement clusters toward artwork while retaining random spread across the floor.
+
 ## Tests
 
 Run the automated gameplay suite headlessly:

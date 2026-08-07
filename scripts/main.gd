@@ -10,7 +10,7 @@ var attractions: Array[Dictionary] = []
 var game_params: Dictionary = {}
 
 var crowd_count: int
-var goal_density_bias: float
+var artwork_density_bias: float
 var minimum_crowd_spacing: float
 var start_exclusion_radius: float
 var attraction_exclusion_radius: float
@@ -60,7 +60,7 @@ func _load_game_params() -> bool:
 	var required := {
 		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
 		"artwork": ["view_duration"],
-		"crowd": ["count", "goal_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
+		"crowd": ["tourists_per_100k_pixels", "artwork_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
 		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "artwork_aim_bias", "aim_jitter_degrees", "aim_retarget_min", "aim_retarget_max", "destination_arrival_radius", "travel_photo_min", "travel_photo_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max"]
 	}
 	for section_name: String in required:
@@ -81,8 +81,7 @@ func _load_game_params() -> bool:
 	var artwork: Dictionary = game_params.artwork
 	var crowd: Dictionary = game_params.crowd
 	artwork_view_duration = float(artwork.view_duration)
-	crowd_count = int(crowd.count)
-	goal_density_bias = float(crowd.goal_density_bias)
+	artwork_density_bias = float(crowd.artwork_density_bias)
 	minimum_crowd_spacing = float(crowd.minimum_spacing)
 	start_exclusion_radius = float(crowd.start_exclusion_radius)
 	attraction_exclusion_radius = float(crowd.artwork_exclusion_radius)
@@ -159,6 +158,7 @@ func _build_ui() -> void:
 	ui_layer.add_child(flash_overlay)
 
 func _spawn_crowd() -> void:
+	crowd_count = _crowd_count_for_current_floor()
 	var rng := RandomNumberGenerator.new()
 	var configured_seed := int(game_params.crowd.get("seed", -1))
 	if configured_seed >= 0:
@@ -235,6 +235,15 @@ func _spawn_crowd() -> void:
 		tourist.photographed.connect(_on_photographed)
 		add_child(tourist)
 
+func _crowd_count_for_current_floor() -> int:
+	var movement_area := Rect2(80, 110, 2240, 1580)
+	var usable_area := movement_area.size.x * movement_area.size.y
+	for wall: Rect2 in _current_level().wall_rects():
+		var covered_area := movement_area.intersection(wall)
+		usable_area -= covered_area.size.x * covered_area.size.y
+	var density := float(game_params.crowd.tourists_per_100k_pixels)
+	return maxi(roundi(maxf(usable_area, 0.0) / 100000.0 * density), 0)
+
 func _sample_elderly_group_size(rng: RandomNumberGenerator, elderly_params: Dictionary, available_slots: int) -> int:
 	var mean := float(elderly_params.group_size)
 	var standard_deviation := float(elderly_params.get("group_size_stddev", 0.0))
@@ -305,7 +314,7 @@ func _sample_crowd_position(rng: RandomNumberGenerator, existing_positions: Arra
 	var valid_fallback := candidate
 	for attempt in 100:
 		# Higher bias values shift more of the crowd toward an attraction.
-		var progress := 1.0 - pow(rng.randf(), goal_density_bias)
+		var progress := 1.0 - pow(rng.randf(), artwork_density_bias)
 		var floor_attractions := attractions.filter(func(item): return item.floor == current_floor)
 		var attraction: Dictionary = floor_attractions[rng.randi_range(0, floor_attractions.size() - 1)]
 		candidate = start_position.lerp(attraction.position, progress)
