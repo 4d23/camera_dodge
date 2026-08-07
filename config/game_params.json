@@ -47,6 +47,11 @@
 	"kid": {
 	  "speed_multiplier": 3.2,
 	  "takes_photos": false,
+	  "dash_detection_radius": 240.0,
+	  "dash_fov_degrees": 105.0,
+	  "dash_speed": 480.0,
+	  "dash_duration": 0.38,
+	  "dash_cooldown": 2.6,
 	  "collision_radius": 34.0,
 	  "knockback_speed": 560.0,
 	  "knockback_duration": 0.22,

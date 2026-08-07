@@ -24,6 +24,9 @@ var type_params: Dictionary = {}
 var tourist_type := "regular"
 var collision_cooldown := 0.0
 var video_hit_timer := 0.0
+var kid_dash_timer := 0.0
+var kid_dash_cooldown_timer := 0.0
+var kid_dash_direction := Vector2.ZERO
 var is_tour_guide := false
 var group_guide: Node2D
 var follow_wobble := Vector2.ZERO
@@ -71,6 +74,15 @@ func _physics_process(delta: float) -> void:
 	collision_cooldown = maxf(collision_cooldown - delta, 0.0)
 	avoidance_timer = maxf(avoidance_timer - delta, 0.0)
 	if tourist_type == "kid":
+		kid_dash_cooldown_timer = maxf(kid_dash_cooldown_timer - delta, 0.0)
+		if kid_dash_timer <= 0.0:
+			_try_start_kid_dash()
+		if kid_dash_timer > 0.0:
+			kid_dash_timer = maxf(kid_dash_timer - delta, 0.0)
+			_move_kid_dash(delta)
+			_check_kid_collision()
+			queue_redraw()
+			return
 		_check_kid_collision()
 	timer -= delta
 	match state:
@@ -248,6 +260,35 @@ func _check_kid_collision() -> void:
 	if global_position.distance_to(player.global_position) <= float(type_params.collision_radius):
 		player.apply_knockback(global_position, float(type_params.knockback_speed), float(type_params.knockback_duration))
 		collision_cooldown = float(type_params.knockback_cooldown)
+
+func _try_start_kid_dash() -> void:
+	if kid_dash_cooldown_timer > 0.0:
+		return
+	var to_player := player.global_position - global_position
+	if to_player.length() <= float(type_params.collision_radius) or to_player.length() > float(type_params.dash_detection_radius):
+		return
+	var facing := velocity.normalized() if velocity.length_squared() > 1.0 else wander_velocity.normalized()
+	if facing.length_squared() < 0.5:
+		return
+	var half_fov := deg_to_rad(float(type_params.dash_fov_degrees) * 0.5)
+	if absf(facing.angle_to(to_player.normalized())) > half_fov or _view_blocked():
+		return
+	kid_dash_direction = to_player.normalized()
+	kid_dash_timer = float(type_params.dash_duration)
+	kid_dash_cooldown_timer = float(type_params.dash_cooldown)
+	velocity = kid_dash_direction * float(type_params.dash_speed)
+	desired_velocity = velocity
+
+func _move_kid_dash(delta: float) -> void:
+	velocity = kid_dash_direction * float(type_params.dash_speed)
+	var next_position := position + velocity * delta
+	if _inside_wall(next_position):
+		kid_dash_timer = 0.0
+		velocity = Vector2.ZERO
+		return
+	position = next_position
+	position.x = clampf(position.x, bounds.position.x, bounds.end.x)
+	position.y = clampf(position.y, bounds.position.y, bounds.end.y)
 
 func _closest_attraction() -> Vector2:
 	if attractions.is_empty():
