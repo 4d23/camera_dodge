@@ -15,6 +15,8 @@ var avoidance_timer := 0.0
 var state := CameraState.WANDER
 var timer := 0.0
 var aim_angle := 0.0
+var aim_target_angle := 0.0
+var aim_retarget_timer := 0.0
 var rng := RandomNumberGenerator.new()
 var body_color := Color("#5b6ee1")
 var view_radius: float
@@ -61,7 +63,8 @@ func setup(config: Dictionary) -> void:
 	_choose_velocity()
 	if bool(type_params.get("takes_video", false)):
 		state = CameraState.AIM
-		aim_angle = global_position.angle_to_point(_closest_attraction())
+		_pick_camera_direction()
+		aim_angle = aim_target_angle
 		video_hit_timer = 0.0
 	else:
 		timer = rng.randf_range(_param("initial_wander_min"), _param("initial_wander_max"))
@@ -93,12 +96,16 @@ func _physics_process(delta: float) -> void:
 				_move_wandering(delta)
 			if timer <= 0.0 and bool(type_params.get("takes_photos", true)):
 				state = CameraState.AIM
-				aim_angle = global_position.angle_to_point(_closest_attraction())
+				_pick_camera_direction()
+				aim_angle = aim_target_angle
 				timer = _param("aim_duration")
 		CameraState.AIM:
 			if bool(type_params.get("takes_video", false)):
 				_move_wandering(delta)
-				aim_angle = global_position.angle_to_point(_closest_attraction())
+				aim_retarget_timer -= delta
+				if aim_retarget_timer <= 0.0:
+					_pick_camera_direction()
+				aim_angle = rotate_toward(aim_angle, aim_target_angle, delta * 1.25)
 				video_hit_timer = maxf(video_hit_timer - delta, 0.0)
 				if video_hit_timer <= 0.0 and _player_is_in_frame():
 					photographed.emit()
@@ -301,6 +308,16 @@ func _closest_attraction() -> Vector2:
 			closest = attraction
 			closest_distance = distance
 	return closest
+
+func _pick_camera_direction() -> void:
+	var artwork_direction := global_position.direction_to(_closest_attraction())
+	if artwork_direction.length_squared() < 0.5:
+		artwork_direction = Vector2.RIGHT
+	var random_direction := Vector2.from_angle(rng.randf_range(0.0, TAU))
+	var bias := clampf(_param("artwork_aim_bias"), 0.0, 1.0)
+	var blended_direction := random_direction.lerp(artwork_direction, bias).normalized()
+	aim_target_angle = blended_direction.angle() + deg_to_rad(rng.randf_range(-_param("aim_jitter_degrees"), _param("aim_jitter_degrees")))
+	aim_retarget_timer = rng.randf_range(_param("aim_retarget_min"), _param("aim_retarget_max"))
 
 func _inside_wall(point: Vector2) -> bool:
 	for wall in walls:

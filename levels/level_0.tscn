@@ -90,6 +90,30 @@ position = Vector2(2140, 1275)
 script = ExtResource("2")
 wall_size = Vector2(360, 30)
 
+[node name="RegistrationDesk" type="StaticBody2D" parent="Walls"]
+position = Vector2(350, 900)
+script = ExtResource("2")
+wall_size = Vector2(190, 72)
+structure_type = "registration_desk"
+
+[node name="InformationKiosk" type="StaticBody2D" parent="Walls"]
+position = Vector2(1110, 900)
+script = ExtResource("2")
+wall_size = Vector2(76, 76)
+structure_type = "information_kiosk"
+
+[node name="GalleryColumn01" type="StaticBody2D" parent="Walls"]
+position = Vector2(1740, 810)
+script = ExtResource("2")
+wall_size = Vector2(82, 82)
+structure_type = "column"
+
+[node name="GalleryColumn02" type="StaticBody2D" parent="Walls"]
+position = Vector2(2020, 1080)
+script = ExtResource("2")
+wall_size = Vector2(82, 82)
+structure_type = "column"
+
 [node name="Artworks" type="Node2D" parent="." unique_id=572626755]
 
 [node name="CodeOfHammurabi" type="Node2D" parent="Artworks" unique_id=1528984709]

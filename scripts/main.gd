@@ -61,7 +61,7 @@ func _load_game_params() -> bool:
 		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
 		"artwork": ["view_duration"],
 		"crowd": ["count", "goal_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
-		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "initial_wander_min", "initial_wander_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max", "wander_min", "wander_max"]
+		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "artwork_aim_bias", "aim_jitter_degrees", "aim_retarget_min", "aim_retarget_max", "initial_wander_min", "initial_wander_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max", "wander_min", "wander_max"]
 	}
 	for section_name: String in required:
 		if not game_params.has(section_name) or not game_params[section_name] is Dictionary:
@@ -181,18 +181,19 @@ func _spawn_crowd() -> void:
 	var regulars_spawned := 0
 	var minimum_regulars := int(game_params.crowd.get("minimum_regular_photographers", 0))
 	for index in crowd_count:
-		var elderly_group_size := int(game_params.tourist_types.elderly.group_size)
+		var elderly_params: Dictionary = game_params.tourist_types.elderly
+		var elderly_minimum_size := int(elderly_params.get("group_size_min", elderly_params.group_size))
 		var remaining_slots := crowd_count - index
 		var regulars_needed := maxi(minimum_regulars - regulars_spawned, 0)
-		var has_room_for_full_group := remaining_slots - elderly_group_size >= regulars_needed
+		var has_room_for_full_group := remaining_slots - elderly_minimum_size >= regulars_needed
 		var must_spawn_regular := elderly_members_left <= 0 and remaining_slots <= regulars_needed
 		var tourist_type := "elderly" if elderly_members_left > 0 else ("regular" if must_spawn_regular else _pick_tourist_type(rng, has_room_for_full_group))
 		var spawn_position: Vector2
 		var tourist_seed := rng.randi()
 		if tourist_type == "elderly":
-			var elderly_params: Dictionary = game_params.tourist_types.elderly
 			if elderly_members_left <= 0:
-				elderly_members_left = int(elderly_params.group_size)
+				var available_group_slots := remaining_slots - regulars_needed
+				elderly_members_left = _sample_elderly_group_size(rng, elderly_params, available_group_slots)
 				elderly_member_index = 0
 				var group_layout := _sample_elderly_group_layout(rng, positions, elderly_members_left, 36.0)
 				elderly_group_anchor = group_layout.anchor
@@ -233,6 +234,19 @@ func _spawn_crowd() -> void:
 			elderly_previous_member = tourist
 		tourist.photographed.connect(_on_photographed)
 		add_child(tourist)
+
+func _sample_elderly_group_size(rng: RandomNumberGenerator, elderly_params: Dictionary, available_slots: int) -> int:
+	var mean := float(elderly_params.group_size)
+	var standard_deviation := float(elderly_params.get("group_size_stddev", 0.0))
+	var minimum_size := int(elderly_params.get("group_size_min", maxi(roundi(mean), 1)))
+	var maximum_size := mini(int(elderly_params.get("group_size_max", roundi(mean))), available_slots)
+	if maximum_size <= minimum_size:
+		return maxi(minimum_size, mini(maximum_size, available_slots))
+	# Box-Muller transform converts two uniform samples into a normal sample.
+	var uniform_a := maxf(rng.randf(), 0.000001)
+	var uniform_b := rng.randf()
+	var normal_sample := sqrt(-2.0 * log(uniform_a)) * cos(TAU * uniform_b)
+	return clampi(roundi(mean + normal_sample * standard_deviation), minimum_size, maximum_size)
 
 func _sample_elderly_group_layout(rng: RandomNumberGenerator, existing_positions: Array[Vector2], group_size: int, spacing: float) -> Dictionary:
 	for attempt in 80:

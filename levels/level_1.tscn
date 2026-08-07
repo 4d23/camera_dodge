@@ -96,6 +96,31 @@ position = Vector2(2140, 1275)
 script = ExtResource("2")
 wall_size = Vector2(360, 30)
 
+[node name="VisitorServicesDesk" type="StaticBody2D" parent="Walls"]
+position = Vector2(360, 900)
+script = ExtResource("2")
+wall_size = Vector2(180, 72)
+structure_type = "registration_desk"
+structure_label = "VISITOR SERVICES"
+
+[node name="InformationKiosk" type="StaticBody2D" parent="Walls"]
+position = Vector2(1110, 900)
+script = ExtResource("2")
+wall_size = Vector2(76, 76)
+structure_type = "information_kiosk"
+
+[node name="GalleryColumn01" type="StaticBody2D" parent="Walls"]
+position = Vector2(1735, 805)
+script = ExtResource("2")
+wall_size = Vector2(82, 82)
+structure_type = "column"
+
+[node name="GalleryColumn02" type="StaticBody2D" parent="Walls"]
+position = Vector2(2015, 1080)
+script = ExtResource("2")
+wall_size = Vector2(82, 82)
+structure_type = "column"
+
 [node name="Artworks" type="Node2D" parent="." unique_id=1877756427]
 
 [node name="MonaLisa" type="Node2D" parent="Artworks" unique_id=70954221]
