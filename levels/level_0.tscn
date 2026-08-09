@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://d0s5a8jls01nw" path="res://assets/artworks/venus_de_milo.jpg" id="7"]
 [ext_resource type="Script" uid="uid://dhsxyl2l11jdj" path="res://scripts/location_marker.gd" id="8"]
 [ext_resource type="Texture2D" uid="uid://q2tv6qxl3k6d" path="res://assets/artworks/great_sphinx_of_tanis.jpg" id="8_tfamw"]
+[ext_resource type="Texture2D" uid="uid://cwef587ldq0vn" path="res://assets/scene/carpet_cutout.png" id="10_carpet"]
 
 [node name="Level0" type="Node2D" unique_id=235238859]
 script = ExtResource("1")
@@ -182,9 +183,11 @@ room_name = "SULLY 227"
 artwork_texture = ExtResource("4")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/CodeOfHammurabi" unique_id=727707401]
-z_index = -1
-color = Color(0.278, 0.482, 0.408, 1)
+z_index = 1
+z_as_relative = false
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="SeatedScribe" type="Node2D" parent="Artworks" unique_id=986436699]
 z_index = 1516
@@ -197,10 +200,12 @@ room_name = "SULLY 321"
 artwork_texture = ExtResource("5")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/SeatedScribe" unique_id=2018225580]
-z_index = -1
+z_index = 1
+z_as_relative = false
 position = Vector2(77.5, -89.166664)
-color = Color(0.278, 0.482, 0.408, 1)
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(21.740822, 45.87694, 22.25848, 137.87549, -21.740822, 138.12306, -22.25848, 46.124516)
+uv = PackedVector2Array(960, 512, 960, 925, 97, 925, 97, 512)
 
 [node name="DyingSlave" type="Node2D" parent="Artworks" unique_id=2011808703]
 z_index = 316
@@ -213,9 +218,11 @@ room_name = "DENON 403"
 artwork_texture = ExtResource("6")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/DyingSlave" unique_id=545944595]
-z_index = -1
-color = Color(0.278, 0.482, 0.408, 1)
+z_index = 1
+z_as_relative = false
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="VenusDeMilo" type="Node2D" parent="Artworks" unique_id=539097966]
 z_index = 390
@@ -228,9 +235,11 @@ room_name = "SULLY 345"
 artwork_texture = ExtResource("7")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/VenusDeMilo" unique_id=1954011242]
-z_index = -1
-color = Color(0.278, 0.482, 0.408, 1)
+z_index = 1
+z_as_relative = false
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="GreatSphinxOfTanis" type="Node2D" parent="Artworks" unique_id=1575764766]
 z_index = 1526
@@ -243,10 +252,12 @@ room_name = "SULLY 345"
 artwork_texture = ExtResource("8_tfamw")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/GreatSphinxOfTanis" unique_id=147968019]
-z_index = -1
+z_index = 1
+z_as_relative = false
 position = Vector2(17.5, 1.6666666)
-color = Color(0.278, 0.482, 0.408, 1)
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-78.485855, -46.22923, -77.51659, 45.765667, -121.514145, 46.22923, -122.48341, -45.765667)
+uv = PackedVector2Array(960, 512, 960, 925, 97, 925, 97, 512)
 
 [node name="Markers" type="Node2D" parent="." unique_id=425103788]
 

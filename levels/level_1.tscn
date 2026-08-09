@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://bev7oa58pawt6" path="res://assets/artworks/coronation_of_napoleon.jpg" id="7"]
 [ext_resource type="Texture2D" uid="uid://8dxp88sy1kuj" path="res://assets/artworks/raft_of_the_medusa.jpg" id="8"]
 [ext_resource type="Script" uid="uid://dhsxyl2l11jdj" path="res://scripts/location_marker.gd" id="9"]
+[ext_resource type="Texture2D" uid="uid://cwef587ldq0vn" path="res://assets/scene/carpet_cutout.png" id="10_carpet"]
 
 [node name="Level1" type="Node2D" unique_id=959045115]
 script = ExtResource("1")
@@ -158,9 +159,11 @@ room_name = "DENON 711"
 artwork_texture = ExtResource("4")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/MonaLisa" unique_id=2039990554]
-z_index = -1
-color = Color(0.278, 0.482, 0.408, 1)
+z_index = 1
+z_as_relative = false
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="LibertyLeadingThePeople" type="Node2D" parent="Artworks" unique_id=2018597690]
 z_index = 1510
@@ -173,10 +176,12 @@ room_name = "DENON 700"
 artwork_texture = ExtResource("5")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/LibertyLeadingThePeople" unique_id=821213455]
-z_index = -1
+z_index = 1
+z_as_relative = false
 position = Vector2(78.33333, -91.666664)
-color = Color(0.278, 0.482, 0.408, 1)
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(22.519707, 46.252182, 21.47747, 138.24629, -22.519707, 137.7478, -21.47747, 45.75372)
+uv = PackedVector2Array(960, 512, 960, 925, 97, 925, 97, 512)
 
 [node name="WingedVictory" type="Node2D" parent="Artworks" unique_id=1254937596]
 z_index = 313
@@ -189,9 +194,11 @@ room_name = "DENON 703"
 artwork_texture = ExtResource("6")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/WingedVictory" unique_id=1257455224]
-z_index = -1
-color = Color(0.278, 0.482, 0.408, 1)
+z_index = 1
+z_as_relative = false
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="CoronationOfNapoleon" type="Node2D" parent="Artworks" unique_id=672429625]
 z_index = 683
@@ -204,10 +211,12 @@ room_name = "DENON 702"
 artwork_texture = ExtResource("7")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/CoronationOfNapoleon" unique_id=278631435]
-z_index = -1
+z_index = 1
+z_as_relative = false
 position = Vector2(20.666668, 0)
-color = Color(0.278, 0.482, 0.408, 1)
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-78.03804, -46.01817, -77.96199, 45.981804, -121.96196, 46.01817, -122.03801, -45.981804)
+uv = PackedVector2Array(960, 512, 960, 925, 97, 925, 97, 512)
 
 [node name="RaftOfTheMedusa" type="Node2D" parent="Artworks" unique_id=126773212]
 z_index = 1507
@@ -220,10 +229,12 @@ room_name = "DENON 700B"
 artwork_texture = ExtResource("8")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/RaftOfTheMedusa" unique_id=896222731]
-z_index = -1
+z_index = 1
+z_as_relative = false
 position = Vector2(15.833333, 2.5)
-color = Color(0.278, 0.482, 0.408, 1)
+texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-78.00835, -46.003994, -77.99165, 45.996006, -121.99165, 46.003994, -122.00835, -45.996006)
+uv = PackedVector2Array(960, 512, 960, 925, 97, 925, 97, 512)
 
 [node name="Markers" type="Node2D" parent="." unique_id=733179891]
 
