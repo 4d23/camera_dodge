@@ -16,6 +16,7 @@ var start_exclusion_radius: float
 var attraction_exclusion_radius: float
 var exit_exclusion_radius: float
 var artwork_view_duration: float
+var maximum_exposures: int
 
 var player: CharacterBody2D
 var exposures := 0
@@ -59,7 +60,7 @@ func _load_game_params() -> bool:
 		return false
 	game_params = parsed
 	var required := {
-		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown"],
+		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown", "maximum_exposures"],
 		"artwork": ["view_duration"],
 		"crowd": ["tourists_per_100k_pixels", "artwork_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
 		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "artwork_aim_bias", "aim_jitter_degrees", "aim_retarget_min", "aim_retarget_max", "destination_arrival_radius", "pathfinding_cell_size", "pathfinding_clearance", "travel_photo_min", "travel_photo_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max"]
@@ -81,6 +82,7 @@ func _load_game_params() -> bool:
 			return false
 	var artwork: Dictionary = game_params.artwork
 	var crowd: Dictionary = game_params.crowd
+	maximum_exposures = int(game_params.player.maximum_exposures)
 	artwork_view_duration = float(artwork.view_duration)
 	artwork_density_bias = float(crowd.artwork_density_bias)
 	minimum_crowd_spacing = float(crowd.minimum_spacing)
@@ -451,7 +453,7 @@ func _on_photographed() -> void:
 	player.hit()
 	flash_overlay.color = Color(1, 0.25, 0.2, 0.35)
 	_update_exposure_text()
-	if exposures >= 3:
+	if maximum_exposures >= 0 and exposures >= maximum_exposures:
 		game_over = true
 		player.set_physics_process(false)
 		_show_failed_page()
@@ -474,7 +476,7 @@ func _show_failed_page() -> void:
 	page.add_child(heading)
 
 	var summary := Label.new()
-	summary.text = "Art visited: %d / %d\nCamera exposures: %d / 3" % [_visited_count(), attractions.size(), exposures]
+	summary.text = "Art visited: %d / %d\nCamera exposures: %d / %d" % [_visited_count(), attractions.size(), exposures, maximum_exposures]
 	summary.position = Vector2(0, 145)
 	summary.size = Vector2(view_size.x, 80)
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -541,8 +543,11 @@ func _show_celebration_page() -> void:
 	page.add_child(restart_hint)
 
 func _update_exposure_text() -> void:
-	var remaining := 3 - exposures
-	exposure_label.text = "PRIVACY  " + "●".repeat(maxi(remaining, 0)) + "○".repeat(mini(exposures, 3))
+	if maximum_exposures < 0:
+		exposure_label.text = "PRIVACY  ∞   EXPOSURES %d" % exposures
+		return
+	var remaining := maximum_exposures - exposures
+	exposure_label.text = "PRIVACY  " + "●".repeat(maxi(remaining, 0)) + "○".repeat(mini(exposures, maximum_exposures))
 
 func _update_art_text() -> void:
 	art_label.text = "ART %d / %d" % [_visited_count(), attractions.size()]
