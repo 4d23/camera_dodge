@@ -121,7 +121,7 @@ script = ExtResource("2")
 wall_size = Vector2(360, 30)
 
 [node name="RegistrationDesk" type="StaticBody2D" parent="Walls" unique_id=1658629658]
-z_index = 691
+z_index = 680
 z_as_relative = false
 position = Vector2(262, 655)
 script = ExtResource("2")
@@ -187,9 +187,9 @@ color = Color(0.278, 0.482, 0.408, 1)
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="SeatedScribe" type="Node2D" parent="Artworks" unique_id=986436699]
-z_index = 1607
+z_index = 1516
 z_as_relative = false
-position = Vector2(224, 1450)
+position = Vector2(165, 1474)
 scale = Vector2(1.2, 1.2)
 script = ExtResource("3")
 artwork_name = "THE SEATED SCRIBE"
@@ -198,8 +198,9 @@ artwork_texture = ExtResource("5")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/SeatedScribe" unique_id=2018225580]
 z_index = -1
+position = Vector2(77.5, -89.166664)
 color = Color(0.278, 0.482, 0.408, 1)
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+polygon = PackedVector2Array(21.740822, 45.87694, 22.25848, 137.87549, -21.740822, 138.12306, -22.25848, 46.124516)
 
 [node name="DyingSlave" type="Node2D" parent="Artworks" unique_id=2011808703]
 z_index = 316
@@ -219,7 +220,7 @@ polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 [node name="VenusDeMilo" type="Node2D" parent="Artworks" unique_id=539097966]
 z_index = 390
 z_as_relative = false
-position = Vector2(1901, 324.00003)
+position = Vector2(1929, 314.00003)
 scale = Vector2(1.2, 1.2)
 script = ExtResource("3")
 artwork_name = "VENUS DE MILO"
@@ -232,7 +233,7 @@ color = Color(0.278, 0.482, 0.408, 1)
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="GreatSphinxOfTanis" type="Node2D" parent="Artworks" unique_id=1575764766]
-z_index = 1573
+z_index = 1526
 z_as_relative = false
 position = Vector2(2204, 1460)
 scale = Vector2(1.2, 1.2)
@@ -243,8 +244,9 @@ artwork_texture = ExtResource("8_tfamw")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/GreatSphinxOfTanis" unique_id=147968019]
 z_index = -1
+position = Vector2(17.5, 1.6666666)
 color = Color(0.278, 0.482, 0.408, 1)
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+polygon = PackedVector2Array(-78.485855, -46.22923, -77.51659, 45.765667, -121.514145, 46.22923, -122.48341, -45.765667)
 
 [node name="Markers" type="Node2D" parent="." unique_id=425103788]
 

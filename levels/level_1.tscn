@@ -148,7 +148,7 @@ structure_type = "column"
 [node name="Artworks" type="Node2D" parent="." unique_id=1877756427]
 
 [node name="MonaLisa" type="Node2D" parent="Artworks" unique_id=70954221]
-z_index = 385
+z_index = 352
 z_as_relative = false
 position = Vector2(375, 269)
 scale = Vector2(1.5, 1.5)
@@ -163,9 +163,9 @@ color = Color(0.278, 0.482, 0.408, 1)
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="LibertyLeadingThePeople" type="Node2D" parent="Artworks" unique_id=2018597690]
-z_index = 1598
+z_index = 1510
 z_as_relative = false
-position = Vector2(227, 1444)
+position = Vector2(161, 1471)
 scale = Vector2(1.2, 1.2)
 script = ExtResource("3")
 artwork_name = "LIBERTY LEADING THE PEOPLE"
@@ -174,11 +174,12 @@ artwork_texture = ExtResource("5")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/LibertyLeadingThePeople" unique_id=821213455]
 z_index = -1
+position = Vector2(78.33333, -91.666664)
 color = Color(0.278, 0.482, 0.408, 1)
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+polygon = PackedVector2Array(22.519707, 46.252182, 21.47747, 138.24629, -22.519707, 137.7478, -21.47747, 45.75372)
 
 [node name="WingedVictory" type="Node2D" parent="Artworks" unique_id=1254937596]
-z_index = 354
+z_index = 313
 z_as_relative = false
 position = Vector2(1096, 236)
 scale = Vector2(1.4, 1.4)
@@ -193,9 +194,9 @@ color = Color(0.278, 0.482, 0.408, 1)
 polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="CoronationOfNapoleon" type="Node2D" parent="Artworks" unique_id=672429625]
-z_index = 744
+z_index = 683
 z_as_relative = false
-position = Vector2(2182, 600)
+position = Vector2(2218, 564)
 scale = Vector2(1.5, 1.5)
 script = ExtResource("3")
 artwork_name = "CORONATION OF NAPOLEON"
@@ -204,13 +205,14 @@ artwork_texture = ExtResource("7")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/CoronationOfNapoleon" unique_id=278631435]
 z_index = -1
+position = Vector2(20.666668, 0)
 color = Color(0.278, 0.482, 0.408, 1)
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+polygon = PackedVector2Array(-78.03804, -46.01817, -77.96199, 45.981804, -121.96196, 46.01817, -122.03801, -45.981804)
 
 [node name="RaftOfTheMedusa" type="Node2D" parent="Artworks" unique_id=126773212]
-z_index = 1568
+z_index = 1507
 z_as_relative = false
-position = Vector2(2198, 1441)
+position = Vector2(2220, 1472)
 scale = Vector2(1.2, 1.2)
 script = ExtResource("3")
 artwork_name = "RAFT OF THE MEDUSA"
@@ -219,8 +221,9 @@ artwork_texture = ExtResource("8")
 
 [node name="Carpet" type="Polygon2D" parent="Artworks/RaftOfTheMedusa" unique_id=896222731]
 z_index = -1
+position = Vector2(15.833333, 2.5)
 color = Color(0.278, 0.482, 0.408, 1)
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+polygon = PackedVector2Array(-78.00835, -46.003994, -77.99165, 45.996006, -121.99165, 46.003994, -122.00835, -45.996006)
 
 [node name="Markers" type="Node2D" parent="." unique_id=733179891]
 
