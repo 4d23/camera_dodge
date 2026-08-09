@@ -47,6 +47,9 @@ var path_history: Array[Vector2] = []
 var navigation: AStarGrid2D
 var travel_path := PackedVector2Array()
 var travel_path_index := 0
+var follower_recovery_path := PackedVector2Array()
+var follower_recovery_index := 0
+var follower_stuck_timer := 0.0
 
 func _ready() -> void:
 	z_as_relative = false
@@ -278,21 +281,62 @@ func _follow_guide(delta: float) -> void:
 		return
 	# Follow the actual trail of the person ahead. Each link in the chain uses
 	# the same rule, so turns ripple naturally down the group.
-	var target := _path_target_behind(previous_group_member, 36.0)
+	var follow_distance := float(type_params.get("follow_distance", 32.0))
+	var trail_target := _path_target_behind(previous_group_member, follow_distance)
+	if follower_recovery_path.is_empty() and _segment_crosses_wall(global_position, trail_target):
+		_plan_follower_recovery(trail_target)
+	if not follower_recovery_path.is_empty() and not _segment_crosses_wall(global_position, trail_target):
+		follower_recovery_path.clear()
+		follower_recovery_index = 0
+	while follower_recovery_index < follower_recovery_path.size() and global_position.distance_to(follower_recovery_path[follower_recovery_index]) <= 18.0:
+		follower_recovery_index += 1
+	var target := trail_target
+	if follower_recovery_index < follower_recovery_path.size():
+		target = follower_recovery_path[follower_recovery_index]
 	var predecessor_velocity: Vector2 = previous_group_member.velocity
 	if predecessor_velocity.length_squared() > 1.0:
 		target += follow_wobble.project(predecessor_velocity.orthogonal().normalized())
 	var distance := global_position.distance_to(target)
 	if distance > 7.0:
-		var follow_speed := clampf(distance * 1.8, 12.0, _param("speed_max") * 1.35)
+		var max_catchup_speed := _param("speed_max") * float(type_params.get("catchup_speed_multiplier", 2.0))
+		var follow_speed := clampf(distance * 2.2, 12.0, max_catchup_speed)
+		var old_position := global_position
 		if avoidance_timer <= 0.0:
 			desired_velocity = global_position.direction_to(target) * follow_speed + _separation_force()
 			if desired_velocity.length() > follow_speed:
 				desired_velocity = desired_velocity.normalized() * follow_speed
 		_move_with_current_velocity(delta)
+		if global_position.distance_to(old_position) < 0.25 and distance > follow_distance:
+			follower_stuck_timer += delta
+		else:
+			follower_stuck_timer = maxf(follower_stuck_timer - delta * 2.0, 0.0)
+		if follower_stuck_timer >= 0.75:
+			_plan_follower_recovery(trail_target)
+			follower_stuck_timer = 0.0
 	else:
 		desired_velocity = Vector2.ZERO
 		velocity = velocity.move_toward(Vector2.ZERO, delta * 70.0)
+
+func _segment_crosses_wall(from: Vector2, to: Vector2) -> bool:
+	var distance := from.distance_to(to)
+	var samples := maxi(ceili(distance / 8.0), 1)
+	for sample_index in range(1, samples + 1):
+		if _inside_wall(from.lerp(to, float(sample_index) / samples)):
+			return true
+	return false
+
+func _plan_follower_recovery(target: Vector2) -> void:
+	follower_recovery_path.clear()
+	follower_recovery_index = 0
+	if navigation == null:
+		return
+	var start_cell := _nearest_walkable_cell(_navigation_cell_for(global_position))
+	var target_cell := _nearest_walkable_cell(_navigation_cell_for(target))
+	if start_cell == Vector2i(-1, -1) or target_cell == Vector2i(-1, -1):
+		return
+	follower_recovery_path = navigation.get_point_path(start_cell, target_cell, true)
+	if follower_recovery_path.size() > 0:
+		follower_recovery_index = 1
 
 func _record_path_point() -> void:
 	if tourist_type != "elderly":

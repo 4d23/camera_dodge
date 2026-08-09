@@ -17,93 +17,129 @@ floor_number = 1
 [node name="Walls" type="Node2D" parent="." unique_id=870840697]
 
 [node name="NorthBoundary" type="StaticBody2D" parent="Walls" unique_id=234720358]
+z_index = 110
+z_as_relative = false
 position = Vector2(1200, 95)
 script = ExtResource("2")
 wall_size = Vector2(2300, 30)
 
 [node name="SouthBoundary" type="StaticBody2D" parent="Walls" unique_id=617996786]
+z_index = 1720
+z_as_relative = false
 position = Vector2(1200, 1705)
 script = ExtResource("2")
 wall_size = Vector2(2300, 30)
 
 [node name="WestBoundary" type="StaticBody2D" parent="Walls" unique_id=1604992588]
+z_index = 1720
+z_as_relative = false
 position = Vector2(65, 900)
 script = ExtResource("2")
 wall_size = Vector2(30, 1640)
 
 [node name="EastBoundary" type="StaticBody2D" parent="Walls" unique_id=537606036]
+z_index = 1720
+z_as_relative = false
 position = Vector2(2335, 900)
 script = ExtResource("2")
 wall_size = Vector2(30, 1640)
 
 [node name="GalleryWall01" type="StaticBody2D" parent="Walls" unique_id=790911676]
+z_index = 500
+z_as_relative = false
 position = Vector2(706, 305)
 script = ExtResource("2")
 wall_size = Vector2(32, 390)
 
 [node name="GalleryWall02" type="StaticBody2D" parent="Walls" unique_id=1487477127]
+z_index = 1090
+z_as_relative = false
 position = Vector2(706, 875)
 script = ExtResource("2")
 wall_size = Vector2(32, 430)
 
 [node name="GalleryWall03" type="StaticBody2D" parent="Walls" unique_id=1597106331]
+z_index = 1690
+z_as_relative = false
 position = Vector2(706, 1475)
 script = ExtResource("2")
 wall_size = Vector2(32, 430)
 
 [node name="GalleryWall04" type="StaticBody2D" parent="Walls" unique_id=2004893599]
+z_index = 645
+z_as_relative = false
 position = Vector2(1476, 370)
 script = ExtResource("2")
 wall_size = Vector2(32, 550)
 
 [node name="GalleryWall05" type="StaticBody2D" parent="Walls" unique_id=156275702]
+z_index = 1290
+z_as_relative = false
 position = Vector2(1476, 1100)
 script = ExtResource("2")
 wall_size = Vector2(32, 380)
 
 [node name="GalleryWall07" type="StaticBody2D" parent="Walls" unique_id=254207317]
+z_index = 659
+z_as_relative = false
 position = Vector2(829, 644)
 script = ExtResource("2")
 wall_size = Vector2(280, 30)
 
 [node name="GalleryWall08" type="StaticBody2D" parent="Walls" unique_id=883400136]
+z_index = 662
+z_as_relative = false
 position = Vector2(1341, 647)
 script = ExtResource("2")
 wall_size = Vector2(300, 30)
 
 [node name="GalleryWall09" type="StaticBody2D" parent="Walls" unique_id=1445345460]
+z_index = 1266
+z_as_relative = false
 position = Vector2(205, 1251)
 script = ExtResource("2")
 wall_size = Vector2(250, 30)
 
 [node name="GalleryWall10" type="StaticBody2D" parent="Walls" unique_id=429387706]
+z_index = 1264
+z_as_relative = false
 position = Vector2(627, 1249)
 script = ExtResource("2")
 wall_size = Vector2(190, 30)
 
 [node name="GalleryWall11" type="StaticBody2D" parent="Walls" unique_id=822475372]
+z_index = 1290
+z_as_relative = false
 position = Vector2(1642, 1275)
 script = ExtResource("2")
 wall_size = Vector2(300, 30)
 
 [node name="GalleryWall12" type="StaticBody2D" parent="Walls" unique_id=261767729]
+z_index = 1290
+z_as_relative = false
 position = Vector2(2140, 1275)
 script = ExtResource("2")
 wall_size = Vector2(360, 30)
 
 [node name="InformationKiosk" type="StaticBody2D" parent="Walls" unique_id=1403542461]
+z_index = 938
+z_as_relative = false
 position = Vector2(1110, 900)
 script = ExtResource("2")
 wall_size = Vector2(76, 76)
 structure_type = "information_kiosk"
 
 [node name="GalleryColumn01" type="StaticBody2D" parent="Walls" unique_id=2027339951]
+z_index = 846
+z_as_relative = false
 position = Vector2(1735, 805)
 script = ExtResource("2")
 wall_size = Vector2(82, 82)
 structure_type = "column"
 
 [node name="GalleryColumn02" type="StaticBody2D" parent="Walls" unique_id=1216307861]
+z_index = 1121
+z_as_relative = false
 position = Vector2(2015, 1080)
 script = ExtResource("2")
 wall_size = Vector2(82, 82)
@@ -112,69 +148,79 @@ structure_type = "column"
 [node name="Artworks" type="Node2D" parent="." unique_id=1877756427]
 
 [node name="MonaLisa" type="Node2D" parent="Artworks" unique_id=70954221]
-position = Vector2(372, 302)
+z_index = 385
+z_as_relative = false
+position = Vector2(375, 269)
 scale = Vector2(1.5, 1.5)
 script = ExtResource("3")
 artwork_name = "MONA LISA"
 room_name = "DENON 711"
 artwork_texture = ExtResource("4")
 
-[node name="Carpet" type="Polygon2D" parent="Artworks/MonaLisa"]
+[node name="Carpet" type="Polygon2D" parent="Artworks/MonaLisa" unique_id=2039990554]
 z_index = -1
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 color = Color(0.278, 0.482, 0.408, 1)
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="LibertyLeadingThePeople" type="Node2D" parent="Artworks" unique_id=2018597690]
-position = Vector2(385, 1532)
+z_index = 1598
+z_as_relative = false
+position = Vector2(227, 1444)
 scale = Vector2(1.2, 1.2)
 script = ExtResource("3")
 artwork_name = "LIBERTY LEADING THE PEOPLE"
 room_name = "DENON 700"
 artwork_texture = ExtResource("5")
 
-[node name="Carpet" type="Polygon2D" parent="Artworks/LibertyLeadingThePeople"]
+[node name="Carpet" type="Polygon2D" parent="Artworks/LibertyLeadingThePeople" unique_id=821213455]
 z_index = -1
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 color = Color(0.278, 0.482, 0.408, 1)
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="WingedVictory" type="Node2D" parent="Artworks" unique_id=1254937596]
-position = Vector2(1094, 277.00006)
+z_index = 354
+z_as_relative = false
+position = Vector2(1096, 236)
 scale = Vector2(1.4, 1.4)
 script = ExtResource("3")
 artwork_name = "WINGED VICTORY"
 room_name = "DENON 703"
 artwork_texture = ExtResource("6")
 
-[node name="Carpet" type="Polygon2D" parent="Artworks/WingedVictory"]
+[node name="Carpet" type="Polygon2D" parent="Artworks/WingedVictory" unique_id=1257455224]
 z_index = -1
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 color = Color(0.278, 0.482, 0.408, 1)
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="CoronationOfNapoleon" type="Node2D" parent="Artworks" unique_id=672429625]
-position = Vector2(2127, 661)
+z_index = 744
+z_as_relative = false
+position = Vector2(2182, 600)
 scale = Vector2(1.5, 1.5)
 script = ExtResource("3")
 artwork_name = "CORONATION OF NAPOLEON"
 room_name = "DENON 702"
 artwork_texture = ExtResource("7")
 
-[node name="Carpet" type="Polygon2D" parent="Artworks/CoronationOfNapoleon"]
+[node name="Carpet" type="Polygon2D" parent="Artworks/CoronationOfNapoleon" unique_id=278631435]
 z_index = -1
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 color = Color(0.278, 0.482, 0.408, 1)
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="RaftOfTheMedusa" type="Node2D" parent="Artworks" unique_id=126773212]
-position = Vector2(2087, 1502)
+z_index = 1568
+z_as_relative = false
+position = Vector2(2198, 1441)
 scale = Vector2(1.2, 1.2)
 script = ExtResource("3")
 artwork_name = "RAFT OF THE MEDUSA"
 room_name = "DENON 700B"
 artwork_texture = ExtResource("8")
 
-[node name="Carpet" type="Polygon2D" parent="Artworks/RaftOfTheMedusa"]
+[node name="Carpet" type="Polygon2D" parent="Artworks/RaftOfTheMedusa" unique_id=896222731]
 z_index = -1
-polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 color = Color(0.278, 0.482, 0.408, 1)
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 
 [node name="Markers" type="Node2D" parent="." unique_id=733179891]
 

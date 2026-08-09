@@ -189,7 +189,7 @@ polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 [node name="SeatedScribe" type="Node2D" parent="Artworks" unique_id=986436699]
 z_index = 1607
 z_as_relative = false
-position = Vector2(385, 1541)
+position = Vector2(224, 1450)
 scale = Vector2(1.2, 1.2)
 script = ExtResource("3")
 artwork_name = "THE SEATED SCRIBE"
@@ -234,7 +234,7 @@ polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 [node name="GreatSphinxOfTanis" type="Node2D" parent="Artworks" unique_id=1575764766]
 z_index = 1573
 z_as_relative = false
-position = Vector2(2147, 1507)
+position = Vector2(2204, 1460)
 scale = Vector2(1.2, 1.2)
 script = ExtResource("3")
 artwork_name = "GREAT SPHINX OF TANIS"

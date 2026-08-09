@@ -76,6 +76,8 @@
 	  "group_size_stddev": 2.0,
 	  "group_size_min": 5,
 	  "group_size_max": 14,
+	  "follow_distance": 32.0,
+	  "catchup_speed_multiplier": 2.0,
 	  "takes_photos": false,
 	  "aim_duration": 3.0,
 	  "cooldown_min": 3.0,
