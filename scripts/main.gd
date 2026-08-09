@@ -110,7 +110,6 @@ func _load_scene_layout() -> void:
 func _build_player() -> void:
 	player = CharacterBody2D.new()
 	player.position = start_position
-	player.z_index = 6
 	player.set_script(load("res://scripts/player.gd"))
 	player.configure(game_params.get("player", {}))
 	add_child(player)

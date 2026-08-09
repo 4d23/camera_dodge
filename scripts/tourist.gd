@@ -1,6 +1,8 @@
 class_name CameraTourist
 extends Node2D
 
+const BODY_FOOT_OFFSET := 16.0
+
 signal photographed
 
 enum CameraState { TRAVEL, AIM, FLASH, COOLDOWN }
@@ -45,6 +47,18 @@ var path_history: Array[Vector2] = []
 var navigation: AStarGrid2D
 var travel_path := PackedVector2Array()
 var travel_path_index := 0
+
+func _ready() -> void:
+	z_as_relative = false
+	_update_depth_z_index()
+
+func _process(_delta: float) -> void:
+	_update_depth_z_index()
+
+func _update_depth_z_index() -> void:
+	# Tourist bodies are centered on their node, so their lower edge is used as
+	# the ground contact point for the shared world depth ordering.
+	z_index = int(round(global_position.y + BODY_FOOT_OFFSET))
 
 func setup(config: Dictionary) -> void:
 	player = config.player

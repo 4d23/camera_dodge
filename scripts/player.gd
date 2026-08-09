@@ -28,11 +28,20 @@ var knockback_velocity := Vector2.ZERO
 var character_sprite: Sprite2D
 
 func _ready() -> void:
+	z_as_relative = false
+	_update_depth_z_index()
 	character_sprite = Sprite2D.new()
 	character_sprite.texture = PLAYER_TEXTURE
 	character_sprite.scale = Vector2(SPRITE_SCALE, SPRITE_SCALE)
 	character_sprite.position = SPRITE_FOOT_OFFSET
 	add_child(character_sprite)
+
+func _process(_delta: float) -> void:
+	_update_depth_z_index()
+
+func _update_depth_z_index() -> void:
+	# The player's origin is already aligned with the character's feet.
+	z_index = int(round(global_position.y))
 
 func _physics_process(delta: float) -> void:
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")

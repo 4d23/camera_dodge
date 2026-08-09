@@ -119,6 +119,11 @@ artwork_name = "MONA LISA"
 room_name = "DENON 711"
 artwork_texture = ExtResource("4")
 
+[node name="Carpet" type="Polygon2D" parent="Artworks/MonaLisa"]
+z_index = -1
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+color = Color(0.278, 0.482, 0.408, 1)
+
 [node name="LibertyLeadingThePeople" type="Node2D" parent="Artworks" unique_id=2018597690]
 position = Vector2(385, 1532)
 scale = Vector2(1.2, 1.2)
@@ -126,6 +131,11 @@ script = ExtResource("3")
 artwork_name = "LIBERTY LEADING THE PEOPLE"
 room_name = "DENON 700"
 artwork_texture = ExtResource("5")
+
+[node name="Carpet" type="Polygon2D" parent="Artworks/LibertyLeadingThePeople"]
+z_index = -1
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+color = Color(0.278, 0.482, 0.408, 1)
 
 [node name="WingedVictory" type="Node2D" parent="Artworks" unique_id=1254937596]
 position = Vector2(1094, 277.00006)
@@ -135,6 +145,11 @@ artwork_name = "WINGED VICTORY"
 room_name = "DENON 703"
 artwork_texture = ExtResource("6")
 
+[node name="Carpet" type="Polygon2D" parent="Artworks/WingedVictory"]
+z_index = -1
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+color = Color(0.278, 0.482, 0.408, 1)
+
 [node name="CoronationOfNapoleon" type="Node2D" parent="Artworks" unique_id=672429625]
 position = Vector2(2127, 661)
 scale = Vector2(1.5, 1.5)
@@ -143,6 +158,11 @@ artwork_name = "CORONATION OF NAPOLEON"
 room_name = "DENON 702"
 artwork_texture = ExtResource("7")
 
+[node name="Carpet" type="Polygon2D" parent="Artworks/CoronationOfNapoleon"]
+z_index = -1
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+color = Color(0.278, 0.482, 0.408, 1)
+
 [node name="RaftOfTheMedusa" type="Node2D" parent="Artworks" unique_id=126773212]
 position = Vector2(2087, 1502)
 scale = Vector2(1.2, 1.2)
@@ -150,6 +170,11 @@ script = ExtResource("3")
 artwork_name = "RAFT OF THE MEDUSA"
 room_name = "DENON 700B"
 artwork_texture = ExtResource("8")
+
+[node name="Carpet" type="Polygon2D" parent="Artworks/RaftOfTheMedusa"]
+z_index = -1
+polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
+color = Color(0.278, 0.482, 0.408, 1)
 
 [node name="Markers" type="Node2D" parent="." unique_id=733179891]
 
