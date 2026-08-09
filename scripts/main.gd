@@ -116,7 +116,7 @@ func _build_player() -> void:
 	add_child(player)
 	var collision := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
-	shape.radius = 17.0
+	shape.radius = player.FOOT_COLLISION_RADIUS
 	collision.shape = shape
 	player.add_child(collision)
 	var camera := Camera2D.new()

@@ -7,7 +7,8 @@
 	"invulnerability_duration": 1.0,
 	"dash_speed": 560.0,
 	"dash_duration": 0.18,
-	"dash_cooldown": 1.0
+	"dash_cooldown": 1.0,
+	"debug_show_foot_circle": true
   },
   "artwork": { "view_duration": 2.0 },
   "crowd": {

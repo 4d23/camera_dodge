@@ -1,5 +1,12 @@
 extends CharacterBody2D
 
+const PLAYER_TEXTURE := preload("res://assets/player/player_cutout.png")
+const FOOT_COLLISION_RADIUS := 17.0
+const SPRITE_SCALE := 0.14
+# The visible character ends at y=416 in the 447px source image. Offset it so
+# the CharacterBody2D origin and collision circle sit at the character's feet.
+const SPRITE_FOOT_OFFSET := Vector2(0, -27)
+
 var speed: float
 var acceleration: float
 var deceleration: float
@@ -8,6 +15,7 @@ var invulnerability_duration: float
 var dash_speed: float
 var dash_duration: float
 var dash_cooldown: float
+var debug_show_foot_circle := false
 var invulnerable := false
 var invulnerability_timer := 0.0
 var dash_timer := 0.0
@@ -17,6 +25,14 @@ var last_move_direction := Vector2.RIGHT
 var dash_direction := Vector2.RIGHT
 var knockback_timer := 0.0
 var knockback_velocity := Vector2.ZERO
+var character_sprite: Sprite2D
+
+func _ready() -> void:
+	character_sprite = Sprite2D.new()
+	character_sprite.texture = PLAYER_TEXTURE
+	character_sprite.scale = Vector2(SPRITE_SCALE, SPRITE_SCALE)
+	character_sprite.position = SPRITE_FOOT_OFFSET
+	add_child(character_sprite)
 
 func _physics_process(delta: float) -> void:
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
@@ -56,6 +72,7 @@ func _physics_process(delta: float) -> void:
 		invulnerability_timer -= delta
 		if invulnerability_timer <= 0.0:
 			invulnerable = false
+	character_sprite.visible = not invulnerable or int(invulnerability_timer * 12.0) % 2 != 0
 	queue_redraw()
 
 func hit() -> void:
@@ -79,13 +96,13 @@ func configure(params: Dictionary) -> void:
 	dash_speed = float(params.dash_speed)
 	dash_duration = float(params.dash_duration)
 	dash_cooldown = float(params.dash_cooldown)
+	debug_show_foot_circle = bool(params.get("debug_show_foot_circle", false))
 
 func _draw() -> void:
+	if debug_show_foot_circle:
+		draw_circle(Vector2.ZERO, FOOT_COLLISION_RADIUS, Color(0.1, 1.0, 0.25, 0.2))
+		draw_arc(Vector2.ZERO, FOOT_COLLISION_RADIUS, 0.0, TAU, 32, Color(0.1, 1.0, 0.25, 0.95), 2.0, true)
 	if invulnerable and int(invulnerability_timer * 12.0) % 2 == 0:
 		return
-	draw_circle(Vector2.ZERO, 18.0, Color("#f4d35e"))
-	draw_circle(Vector2(0, -16), 9.0, Color("#f2c6a0"))
-	draw_arc(Vector2.ZERO, 22.0, 0.0, TAU, 24, Color.WHITE, 3.0)
-	draw_line(Vector2(-9, 2), Vector2(9, 2), Color("#ee964b"), 5.0)
 	if dash_timer > 0.0:
 		draw_line(-dash_direction * 22.0, -dash_direction * 48.0, Color(1.0, 0.85, 0.3, 0.7), 8.0)
