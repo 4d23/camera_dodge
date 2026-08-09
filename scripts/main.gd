@@ -454,8 +454,48 @@ func _on_photographed() -> void:
 	if exposures >= 3:
 		game_over = true
 		player.set_physics_process(false)
-		status_label.text = "CAUGHT IN TOO MANY PHOTOS!  Press R to try again"
-		status_label.position.x = 350
+		_show_failed_page()
+
+func _show_failed_page() -> void:
+	var page := ColorRect.new()
+	page.name = "FailurePage"
+	page.color = Color("#21151b")
+	page.size = view_size
+	ui_layer.add_child(page)
+
+	var heading := Label.new()
+	heading.name = "FailureHeading"
+	heading.text = "YOU FAILED"
+	heading.position = Vector2(0, 65)
+	heading.size = Vector2(view_size.x, 55)
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heading.add_theme_font_size_override("font_size", 42)
+	heading.add_theme_color_override("font_color", Color("#ff6b6b"))
+	page.add_child(heading)
+
+	var summary := Label.new()
+	summary.text = "Art visited: %d / %d\nCamera exposures: %d / 3" % [_visited_count(), attractions.size(), exposures]
+	summary.position = Vector2(0, 145)
+	summary.size = Vector2(view_size.x, 80)
+	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	summary.add_theme_font_size_override("font_size", 24)
+	page.add_child(summary)
+
+	var reason := Label.new()
+	reason.text = "You were caught in too many photos."
+	reason.position = Vector2(0, 260)
+	reason.size = Vector2(view_size.x, 50)
+	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	reason.add_theme_font_size_override("font_size", 26)
+	page.add_child(reason)
+
+	var restart_hint := Label.new()
+	restart_hint.text = "Press R to try again"
+	restart_hint.position = Vector2(0, 525)
+	restart_hint.size = Vector2(view_size.x, 35)
+	restart_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	restart_hint.add_theme_font_size_override("font_size", 20)
+	page.add_child(restart_hint)
 
 func _show_celebration_page() -> void:
 	var page := ColorRect.new()

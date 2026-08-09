@@ -26,6 +26,7 @@ func _run() -> void:
 	await _test_structures_block_camera_view()
 	await _test_controls()
 	await _test_artwork_and_entry_exit()
+	await _test_failure_page()
 	if failures == 0:
 		print("PASS: %d assertions" % assertions)
 		quit(0)
@@ -424,6 +425,24 @@ func _test_artwork_and_entry_exit() -> void:
 	game._process(0.016)
 	_expect(game.game_over, "reaching the exit completes the visit")
 	_expect(not game.player.is_physics_processing(), "controls stop after exiting")
+	game.queue_free()
+	await process_frame
+
+func _test_failure_page() -> void:
+	print("Failure page")
+	var game := MainScene.instantiate()
+	get_root().add_child(game)
+	await process_frame
+	for tourist in game.crowd_nodes:
+		tourist.set_physics_process(false)
+	for exposure in 3:
+		game.player.invulnerable = false
+		game._on_photographed()
+	_expect(game.game_over, "three exposures fail the run")
+	var failure_page: Node = game.ui_layer.get_node_or_null("FailurePage")
+	_expect(failure_page != null, "failure opens the full-screen failed page")
+	_expect(failure_page != null and failure_page.get_node("FailureHeading").text == "YOU FAILED", "failed page shows the failure heading")
+	_expect(not game.player.is_physics_processing(), "failure stops player controls")
 	game.queue_free()
 	await process_frame
 
