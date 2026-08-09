@@ -4,7 +4,7 @@ extends Node2D
 
 const ART_FRAME := Rect2(-42, -55, 84, 110)
 const ART_IMAGE := Rect2(-35, -48, 70, 96)
-const ART_FRAME_BOTTOM_Y := 55.0
+const ARTWORK_Z_INDEX := 2
 
 @export var artwork_name := "Artwork":
 	set(value): artwork_name = value; queue_redraw()
@@ -23,7 +23,9 @@ func _ready() -> void:
 	queue_redraw()
 
 func _update_static_z_index() -> void:
-	z_index = int(round(global_position.y + ART_FRAME_BOTTOM_Y * absf(global_scale.y)))
+	# Artwork is floor-level scenery: above its carpet (z=1), but always below
+	# the player and tourists, whose depth indices follow their world Y position.
+	z_index = ARTWORK_Z_INDEX
 
 func set_visited(value: bool) -> void:
 	visited = value
