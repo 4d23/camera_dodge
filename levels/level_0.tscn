@@ -190,7 +190,7 @@ polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="SeatedScribe" type="Node2D" parent="Artworks" unique_id=986436699]
-z_index = 1516
+z_index = 1540
 z_as_relative = false
 position = Vector2(165, 1474)
 scale = Vector2(1.2, 1.2)
@@ -225,7 +225,7 @@ polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="VenusDeMilo" type="Node2D" parent="Artworks" unique_id=539097966]
-z_index = 390
+z_index = 380
 z_as_relative = false
 position = Vector2(1929, 314.00003)
 scale = Vector2(1.2, 1.2)

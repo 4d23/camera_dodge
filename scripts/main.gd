@@ -30,6 +30,12 @@ var artwork_view_progress: Array[float] = []
 var ui_layer: CanvasLayer
 var art_label: Label
 var floor_label: Label
+var minimap: MuseumMinimap
+var has_map := false
+var collectible_popup: PanelContainer
+var collectible_texture: TextureRect
+var collectible_name: Label
+var collectible_tween: Tween
 var current_floor := 0
 var stair_cooldown := 0.0
 var crowd_nodes: Array[Node] = []
@@ -160,11 +166,77 @@ func _build_ui() -> void:
 	floor_label.add_theme_font_size_override("font_size", 15)
 	ui_layer.add_child(floor_label)
 
+	minimap = MuseumMinimap.new()
+	minimap.name = "Minimap"
+	minimap.position = Vector2(view_size.x - 238.0, 20.0)
+	minimap.size = Vector2(220.0, 165.0)
+	minimap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	minimap.configure(player, _current_level(), current_floor)
+	minimap.visible = false
+	ui_layer.add_child(minimap)
+
 	flash_overlay = ColorRect.new()
 	flash_overlay.color = Color(1, 1, 1, 0)
 	flash_overlay.size = view_size
 	flash_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui_layer.add_child(flash_overlay)
+	_build_collectible_popup()
+
+func _build_collectible_popup() -> void:
+	collectible_popup = PanelContainer.new()
+	collectible_popup.name = "CollectiblePopup"
+	collectible_popup.position = Vector2((view_size.x - 360.0) * 0.5, 105.0)
+	collectible_popup.size = Vector2(360.0, 145.0)
+	collectible_popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	collectible_popup.visible = false
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.055, 0.065, 0.08, 0.94)
+	panel_style.border_color = Color(1, 1, 1, 0.28)
+	panel_style.set_border_width_all(2)
+	panel_style.set_corner_radius_all(9)
+	panel_style.content_margin_left = 12.0
+	panel_style.content_margin_top = 12.0
+	panel_style.content_margin_right = 12.0
+	panel_style.content_margin_bottom = 12.0
+	collectible_popup.add_theme_stylebox_override("panel", panel_style)
+	ui_layer.add_child(collectible_popup)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	collectible_popup.add_child(row)
+	collectible_texture = TextureRect.new()
+	collectible_texture.custom_minimum_size = Vector2(120.0, 120.0)
+	collectible_texture.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	collectible_texture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	collectible_texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(collectible_texture)
+
+	var text_column := VBoxContainer.new()
+	text_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_column.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(text_column)
+	var collected_label := Label.new()
+	collected_label.text = "COLLECTED"
+	collected_label.add_theme_font_size_override("font_size", 12)
+	collected_label.add_theme_color_override("font_color", Color("#f4d35e"))
+	text_column.add_child(collected_label)
+	collectible_name = Label.new()
+	collectible_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	collectible_name.add_theme_font_size_override("font_size", 19)
+	collectible_name.add_theme_color_override("font_color", Color.WHITE)
+	text_column.add_child(collectible_name)
+
+func _show_collectible(texture: Texture2D, item_name: String) -> void:
+	if collectible_tween != null and collectible_tween.is_valid():
+		collectible_tween.kill()
+	collectible_texture.texture = texture
+	collectible_name.text = item_name
+	collectible_popup.modulate.a = 1.0
+	collectible_popup.visible = true
+	collectible_tween = create_tween()
+	collectible_tween.tween_interval(2.4)
+	collectible_tween.tween_property(collectible_popup, "modulate:a", 0.0, 0.35)
+	collectible_tween.tween_callback(func(): collectible_popup.visible = false)
 
 func _spawn_crowd() -> void:
 	crowd_count = _crowd_count_for_current_floor()
@@ -388,6 +460,7 @@ func _process(delta: float) -> void:
 	stair_cooldown = maxf(stair_cooldown - delta, 0.0)
 	if game_over:
 		return
+	_check_map_pickup()
 	for index in attractions.size():
 		if visited_attractions[index]:
 			continue
@@ -402,6 +475,7 @@ func _process(delta: float) -> void:
 				visited_attractions[index] = true
 				artwork_node.set_view_progress(0.0, 0.0)
 				artwork_node.set_visited(true)
+				_show_collectible(artwork_node.artwork_texture, attractions[index].name)
 				status_label.text = "%s visited!" % attractions[index].name
 				_update_art_text()
 				queue_redraw()
@@ -416,6 +490,17 @@ func _process(delta: float) -> void:
 		_show_celebration_page()
 		queue_redraw()
 
+func _check_map_pickup() -> void:
+	if has_map:
+		return
+	for wall in _current_level().get_node("Walls").get_children():
+		if wall.structure_type == "registration_desk" and wall.world_rect().grow(55.0).has_point(player.global_position):
+			has_map = true
+			minimap.visible = true
+			_show_collectible(load("res://assets/scene_reference/museum-trifold-brochure-template-design.png") as Texture2D, "INFORMATION BROCHURE")
+			status_label.text = "Museum map collected!"
+			return
+
 func _switch_floor() -> void:
 	_current_level().set_active(false)
 	current_floor = 1 - current_floor
@@ -424,6 +509,7 @@ func _switch_floor() -> void:
 	stair_cooldown = 1.5
 	player.position += Vector2(0, 75)
 	floor_label.text = "LEVEL %d" % current_floor
+	minimap.set_level(_current_level(), current_floor)
 	status_label.text = "Entered Level %d" % current_floor
 	for tourist in crowd_nodes:
 		if is_instance_valid(tourist):
