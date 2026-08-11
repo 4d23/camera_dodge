@@ -8,10 +8,19 @@
 	"dash_speed": 560.0,
 	"dash_duration": 0.18,
 	"dash_cooldown": 1.0,
+	"energy_maximum": 100.0,
+	"energy_recovery_per_second": 1.0,
+	"dash_energy_cost": 25.0,
 	"maximum_exposures": -1,
 	"debug_show_foot_circle": true
   },
   "artwork": { "view_duration": 2.0 },
+  "shop": {
+	"starting_coins": 3,
+	"water_price": 1,
+	"water_energy_restore": 60.0,
+	"water_purchase_duration": 2.0
+  },
   "crowd": {
 	"tourists_per_100k_pixels": 1.0,
 	"seed": -1,

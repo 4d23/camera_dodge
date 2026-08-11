@@ -15,6 +15,10 @@ var invulnerability_duration: float
 var dash_speed: float
 var dash_duration: float
 var dash_cooldown: float
+var maximum_energy: float
+var energy_recovery_per_second: float
+var dash_energy_cost: float
+var energy: float
 var debug_show_foot_circle := false
 var invulnerable := false
 var invulnerability_timer := 0.0
@@ -44,6 +48,7 @@ func _update_depth_z_index() -> void:
 	z_index = int(round(global_position.y))
 
 func _physics_process(delta: float) -> void:
+	energy = minf(energy + energy_recovery_per_second * delta, maximum_energy)
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	var wasd := Vector2(
 		float(Input.is_physical_key_pressed(KEY_D)) - float(Input.is_physical_key_pressed(KEY_A)),
@@ -60,10 +65,11 @@ func _physics_process(delta: float) -> void:
 	if direction.length_squared() > 0.0:
 		last_move_direction = direction.normalized()
 	var dash_pressed := Input.is_physical_key_pressed(KEY_SPACE) or (InputMap.has_action("dash") and Input.is_action_pressed("dash"))
-	if dash_pressed and not dash_was_pressed and dash_cooldown_timer <= 0.0 and dash_timer <= 0.0:
+	if dash_pressed and not dash_was_pressed and dash_cooldown_timer <= 0.0 and dash_timer <= 0.0 and energy >= dash_energy_cost:
 		dash_direction = last_move_direction
 		dash_timer = dash_duration
 		dash_cooldown_timer = dash_cooldown
+		energy -= dash_energy_cost
 	dash_was_pressed = dash_pressed
 	if knockback_timer > 0.0:
 		knockback_timer -= delta
@@ -105,7 +111,14 @@ func configure(params: Dictionary) -> void:
 	dash_speed = float(params.dash_speed)
 	dash_duration = float(params.dash_duration)
 	dash_cooldown = float(params.dash_cooldown)
+	maximum_energy = float(params.energy_maximum)
+	energy_recovery_per_second = float(params.energy_recovery_per_second)
+	dash_energy_cost = float(params.dash_energy_cost)
+	energy = maximum_energy
 	debug_show_foot_circle = bool(params.get("debug_show_foot_circle", false))
+
+func restore_energy(amount: float) -> void:
+	energy = minf(energy + amount, maximum_energy)
 
 func _draw() -> void:
 	if debug_show_foot_circle:

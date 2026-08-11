@@ -36,6 +36,15 @@ var collectible_popup: PanelContainer
 var collectible_texture: TextureRect
 var collectible_name: Label
 var collectible_tween: Tween
+var energy_bar: ProgressBar
+var energy_value_label: Label
+var coin_label: Label
+var shop_prompt: Label
+var water_progress_bar: ProgressBar
+var water_shop: Node2D
+var coins := 0
+var water_purchase_progress := 0.0
+var water_purchase_available := true
 var current_floor := 0
 var stair_cooldown := 0.0
 var crowd_nodes: Array[Node] = []
@@ -46,6 +55,7 @@ func _ready() -> void:
 	if not _load_game_params():
 		return
 	_load_scene_layout()
+	_find_water_shop()
 	visited_attractions.resize(attractions.size())
 	visited_attractions.fill(false)
 	artwork_view_progress.resize(attractions.size())
@@ -66,8 +76,9 @@ func _load_game_params() -> bool:
 		return false
 	game_params = parsed
 	var required := {
-		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown", "maximum_exposures"],
+		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown", "energy_maximum", "energy_recovery_per_second", "dash_energy_cost", "maximum_exposures"],
 		"artwork": ["view_duration"],
+		"shop": ["starting_coins", "water_price", "water_energy_restore", "water_purchase_duration"],
 		"crowd": ["tourists_per_100k_pixels", "artwork_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
 		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "artwork_aim_bias", "aim_jitter_degrees", "aim_retarget_min", "aim_retarget_max", "destination_arrival_radius", "pathfinding_cell_size", "pathfinding_clearance", "travel_photo_min", "travel_photo_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max"]
 	}
@@ -134,6 +145,10 @@ func _build_player() -> void:
 	camera.limit_bottom = int(WORLD_SIZE.y)
 	player.add_child(camera)
 
+func _find_water_shop() -> void:
+	water_shop = $Level0/Walls/WaterShop
+	coins = int(game_params.shop.starting_coins)
+
 func _build_ui() -> void:
 	ui_layer = CanvasLayer.new()
 	ui_layer.layer = 20
@@ -174,6 +189,56 @@ func _build_ui() -> void:
 	minimap.configure(player, _current_level(), current_floor)
 	minimap.visible = false
 	ui_layer.add_child(minimap)
+
+	energy_bar = ProgressBar.new()
+	energy_bar.position = Vector2(18, 80)
+	energy_bar.size = Vector2(220, 22)
+	energy_bar.min_value = 0.0
+	energy_bar.max_value = player.maximum_energy
+	energy_bar.show_percentage = false
+	var energy_background := StyleBoxFlat.new()
+	energy_background.bg_color = Color(0.07, 0.09, 0.12, 0.9)
+	energy_background.set_corner_radius_all(5)
+	energy_bar.add_theme_stylebox_override("background", energy_background)
+	var energy_fill := StyleBoxFlat.new()
+	energy_fill.bg_color = Color("#47c9a2")
+	energy_fill.set_corner_radius_all(5)
+	energy_bar.add_theme_stylebox_override("fill", energy_fill)
+	ui_layer.add_child(energy_bar)
+	energy_value_label = Label.new()
+	energy_value_label.position = Vector2(26, 81)
+	energy_value_label.add_theme_font_size_override("font_size", 13)
+	ui_layer.add_child(energy_value_label)
+	coin_label = Label.new()
+	coin_label.position = Vector2(250, 81)
+	coin_label.add_theme_font_size_override("font_size", 14)
+	ui_layer.add_child(coin_label)
+	_update_energy_ui()
+
+	shop_prompt = Label.new()
+	shop_prompt.position = Vector2(0, view_size.y - 90.0)
+	shop_prompt.size = Vector2(view_size.x, 35)
+	shop_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shop_prompt.add_theme_font_size_override("font_size", 18)
+	shop_prompt.add_theme_color_override("font_color", Color("#d9f2f2"))
+	shop_prompt.visible = false
+	ui_layer.add_child(shop_prompt)
+	water_progress_bar = ProgressBar.new()
+	water_progress_bar.position = Vector2((view_size.x - 260.0) * 0.5, view_size.y - 52.0)
+	water_progress_bar.size = Vector2(260.0, 12.0)
+	water_progress_bar.min_value = 0.0
+	water_progress_bar.max_value = float(game_params.shop.water_purchase_duration)
+	water_progress_bar.show_percentage = false
+	var water_progress_background := StyleBoxFlat.new()
+	water_progress_background.bg_color = Color(0.05, 0.08, 0.1, 0.9)
+	water_progress_background.set_corner_radius_all(4)
+	water_progress_bar.add_theme_stylebox_override("background", water_progress_background)
+	var water_progress_fill := StyleBoxFlat.new()
+	water_progress_fill.bg_color = Color("#64d8ff")
+	water_progress_fill.set_corner_radius_all(4)
+	water_progress_bar.add_theme_stylebox_override("fill", water_progress_fill)
+	water_progress_bar.visible = false
+	ui_layer.add_child(water_progress_bar)
 
 	flash_overlay = ColorRect.new()
 	flash_overlay.color = Color(1, 1, 1, 0)
@@ -458,9 +523,11 @@ func _inside_wall(point: Vector2) -> bool:
 func _process(delta: float) -> void:
 	flash_overlay.color.a = move_toward(flash_overlay.color.a, 0.0, delta * 3.8)
 	stair_cooldown = maxf(stair_cooldown - delta, 0.0)
+	_update_energy_ui()
 	if game_over:
 		return
 	_check_map_pickup()
+	_update_water_shop(delta)
 	for index in attractions.size():
 		if visited_attractions[index]:
 			continue
@@ -489,6 +556,46 @@ func _process(delta: float) -> void:
 		player.set_physics_process(false)
 		_show_celebration_page()
 		queue_redraw()
+
+func _update_energy_ui() -> void:
+	if player == null or energy_bar == null:
+		return
+	energy_bar.value = player.energy
+	energy_value_label.text = "ENERGY  %d / %d" % [roundi(player.energy), roundi(player.maximum_energy)]
+	coin_label.text = "COINS  %d" % coins
+
+func _update_water_shop(delta: float) -> void:
+	var next_to_shop: bool = current_floor == 0 and water_shop.player_is_next_to(player.global_position)
+	shop_prompt.visible = next_to_shop
+	water_progress_bar.visible = next_to_shop
+	if not next_to_shop:
+		water_purchase_progress = 0.0
+		water_progress_bar.value = 0.0
+		water_purchase_available = true
+		return
+	var price := int(game_params.shop.water_price)
+	if not water_purchase_available:
+		water_progress_bar.value = water_progress_bar.max_value
+		shop_prompt.text = "Water collected — step away to buy again"
+		return
+	if coins < price:
+		water_purchase_progress = 0.0
+		water_progress_bar.value = 0.0
+		shop_prompt.text = "Not enough coins"
+		return
+	var duration := float(game_params.shop.water_purchase_duration)
+	water_purchase_progress += delta
+	water_progress_bar.value = water_purchase_progress
+	var remaining := maxf(duration - water_purchase_progress, 0.0)
+	shop_prompt.text = "Getting water… %.1fs  •  %d coin%s" % [remaining, price, "" if price == 1 else "s"]
+	if water_purchase_progress >= duration:
+		coins -= price
+		player.restore_energy(float(game_params.shop.water_energy_restore))
+		water_purchase_progress = 0.0
+		water_purchase_available = false
+		shop_prompt.text = "Water collected — energy restored!"
+		status_label.text = "Water purchased — energy restored!"
+		_update_energy_ui()
 
 func _check_map_pickup() -> void:
 	if has_map:
