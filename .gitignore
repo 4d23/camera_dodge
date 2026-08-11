@@ -3,6 +3,7 @@
 *.import
 godot-tests.log
 godot-validation.log
+godot-import.log
 
 # Local editor configuration
 .vscode/
