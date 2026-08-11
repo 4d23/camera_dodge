@@ -36,3 +36,4 @@
 8. ~Tourist group should be a straight line but they should follow the same path that the guide walk. So not always a straight line~
 9. ~Raytracing to get the proper cone~
 10. Rander when player reach the area to speed it up
+11. Player can take picture or player has parents following them and they force player to take pictures
