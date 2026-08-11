@@ -16,14 +16,22 @@ var start_exclusion_radius: float
 var attraction_exclusion_radius: float
 var exit_exclusion_radius: float
 var artwork_view_duration: float
-var maximum_exposures: int
+var sanity_maximum: float
+var sanity_minimum: float
+var sanity_photo_loss: float
+var sanity_recovery_per_second: float
+var sanity_impaired_threshold: float
+var sanity_impaired_speed_multiplier: float
+var sanity_reverse_controls: bool
 
 var player: CharacterBody2D
 var exposures := 0
+var sanity: float
 var game_over := false
 var won := false
 var status_label: Label
-var exposure_label: Label
+var sanity_label: Label
+var sanity_bar: ProgressBar
 var flash_overlay: ColorRect
 var visited_attractions: Array[bool] = []
 var artwork_view_progress: Array[float] = []
@@ -39,12 +47,15 @@ var collectible_tween: Tween
 var energy_bar: ProgressBar
 var energy_value_label: Label
 var coin_label: Label
+var coin_icon: Label
 var shop_prompt: Label
 var water_progress_bar: ProgressBar
 var water_shop: Node2D
+var ice_cream_shop: Node2D
 var coins := 0
-var water_purchase_progress := 0.0
-var water_purchase_available := true
+var shop_purchase_progress := 0.0
+var shop_purchase_available := true
+var active_shop := ""
 var current_floor := 0
 var stair_cooldown := 0.0
 var crowd_nodes: Array[Node] = []
@@ -76,9 +87,10 @@ func _load_game_params() -> bool:
 		return false
 	game_params = parsed
 	var required := {
-		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown", "energy_maximum", "energy_recovery_per_second", "dash_energy_cost", "maximum_exposures"],
+		"player": ["speed", "acceleration", "deceleration", "controller_deadzone", "invulnerability_duration", "dash_speed", "dash_duration", "dash_cooldown", "energy_maximum", "energy_recovery_per_second", "dash_energy_cost"],
+		"sanity": ["maximum", "minimum", "photo_loss", "recovery_per_second", "impaired_threshold", "impaired_speed_multiplier", "reverse_controls"],
 		"artwork": ["view_duration"],
-		"shop": ["starting_coins", "water_price", "water_energy_restore", "water_purchase_duration"],
+		"shop": ["starting_coins", "water_price", "water_energy_restore", "water_purchase_duration", "ice_cream_price", "ice_cream_sanity_restore", "ice_cream_purchase_duration"],
 		"crowd": ["tourists_per_100k_pixels", "artwork_density_bias", "minimum_spacing", "start_exclusion_radius", "artwork_exclusion_radius", "exit_exclusion_radius", "type_weights"],
 		"tourist": ["view_radius", "fov_degrees", "speed_min", "speed_max", "separation_radius", "separation_strength", "artwork_aim_bias", "aim_jitter_degrees", "aim_retarget_min", "aim_retarget_max", "destination_arrival_radius", "pathfinding_cell_size", "pathfinding_clearance", "travel_photo_min", "travel_photo_max", "aim_duration", "flash_duration", "cooldown_min", "cooldown_max"]
 	}
@@ -99,7 +111,14 @@ func _load_game_params() -> bool:
 			return false
 	var artwork: Dictionary = game_params.artwork
 	var crowd: Dictionary = game_params.crowd
-	maximum_exposures = int(game_params.player.maximum_exposures)
+	sanity_maximum = float(game_params.sanity.maximum)
+	sanity_minimum = float(game_params.sanity.minimum)
+	sanity_photo_loss = float(game_params.sanity.photo_loss)
+	sanity_recovery_per_second = float(game_params.sanity.recovery_per_second)
+	sanity_impaired_threshold = float(game_params.sanity.impaired_threshold)
+	sanity_impaired_speed_multiplier = float(game_params.sanity.impaired_speed_multiplier)
+	sanity_reverse_controls = bool(game_params.sanity.reverse_controls)
+	sanity = sanity_maximum
 	artwork_view_duration = float(artwork.view_duration)
 	artwork_density_bias = float(crowd.artwork_density_bias)
 	minimum_crowd_spacing = float(crowd.minimum_spacing)
@@ -147,6 +166,7 @@ func _build_player() -> void:
 
 func _find_water_shop() -> void:
 	water_shop = $Level0/Walls/WaterShop
+	ice_cream_shop = $Level0/Walls/IceCreamShop
 	coins = int(game_params.shop.starting_coins)
 
 func _build_ui() -> void:
@@ -158,12 +178,6 @@ func _build_ui() -> void:
 	title.position = Vector2(18, 16)
 	title.add_theme_font_size_override("font_size", 20)
 	ui_layer.add_child(title)
-
-	exposure_label = Label.new()
-	exposure_label.position = Vector2(500, 18)
-	exposure_label.add_theme_font_size_override("font_size", 16)
-	ui_layer.add_child(exposure_label)
-	_update_exposure_text()
 
 	status_label = Label.new()
 	status_label.text = "Explore, visit art, then find the EXIT"
@@ -209,10 +223,38 @@ func _build_ui() -> void:
 	energy_value_label.position = Vector2(26, 81)
 	energy_value_label.add_theme_font_size_override("font_size", 13)
 	ui_layer.add_child(energy_value_label)
+
+	sanity_bar = ProgressBar.new()
+	sanity_bar.position = Vector2(420, 80)
+	sanity_bar.size = Vector2(220, 22)
+	sanity_bar.min_value = 0.0
+	sanity_bar.max_value = sanity_maximum
+	sanity_bar.show_percentage = false
+	var sanity_background := StyleBoxFlat.new()
+	sanity_background.bg_color = Color(0.07, 0.09, 0.12, 0.9)
+	sanity_background.set_corner_radius_all(5)
+	sanity_bar.add_theme_stylebox_override("background", sanity_background)
+	var sanity_fill := StyleBoxFlat.new()
+	sanity_fill.bg_color = Color("#b68cff")
+	sanity_fill.set_corner_radius_all(5)
+	sanity_bar.add_theme_stylebox_override("fill", sanity_fill)
+	ui_layer.add_child(sanity_bar)
+	sanity_label = Label.new()
+	sanity_label.position = Vector2(428, 81)
+	sanity_label.add_theme_font_size_override("font_size", 13)
+	ui_layer.add_child(sanity_label)
+
+	coin_icon = Label.new()
+	coin_icon.text = "●"
+	coin_icon.position = Vector2(250, 80)
+	coin_icon.add_theme_font_size_override("font_size", 16)
+	coin_icon.add_theme_color_override("font_color", Color("#f4d35e"))
+	ui_layer.add_child(coin_icon)
 	coin_label = Label.new()
-	coin_label.position = Vector2(250, 81)
+	coin_label.position = Vector2(269, 81)
 	coin_label.add_theme_font_size_override("font_size", 14)
 	ui_layer.add_child(coin_label)
+	_update_sanity_ui()
 	_update_energy_ui()
 
 	shop_prompt = Label.new()
@@ -523,6 +565,9 @@ func _inside_wall(point: Vector2) -> bool:
 func _process(delta: float) -> void:
 	flash_overlay.color.a = move_toward(flash_overlay.color.a, 0.0, delta * 3.8)
 	stair_cooldown = maxf(stair_cooldown - delta, 0.0)
+	if not game_over:
+		sanity = minf(sanity + sanity_recovery_per_second * delta, sanity_maximum)
+	_update_sanity_ui()
 	_update_energy_ui()
 	if game_over:
 		return
@@ -565,36 +610,53 @@ func _update_energy_ui() -> void:
 	coin_label.text = "COINS  %d" % coins
 
 func _update_water_shop(delta: float) -> void:
-	var next_to_shop: bool = current_floor == 0 and water_shop.player_is_next_to(player.global_position)
-	shop_prompt.visible = next_to_shop
-	water_progress_bar.visible = next_to_shop
-	if not next_to_shop:
-		water_purchase_progress = 0.0
+	var shop_kind := ""
+	if current_floor == 0 and water_shop.player_is_next_to(player.global_position):
+		shop_kind = "water"
+	elif current_floor == 0 and ice_cream_shop.player_is_next_to(player.global_position):
+		shop_kind = "ice_cream"
+	shop_prompt.visible = shop_kind != ""
+	water_progress_bar.visible = shop_kind != ""
+	if shop_kind == "":
+		shop_purchase_progress = 0.0
 		water_progress_bar.value = 0.0
-		water_purchase_available = true
+		shop_purchase_available = true
+		active_shop = ""
 		return
-	var price := int(game_params.shop.water_price)
-	if not water_purchase_available:
+	if active_shop != shop_kind:
+		active_shop = shop_kind
+		shop_purchase_progress = 0.0
+		shop_purchase_available = true
+	var is_water := shop_kind == "water"
+	var item_name := "Water" if is_water else "Ice cream"
+	var price := int(game_params.shop.water_price if is_water else game_params.shop.ice_cream_price)
+	var duration := float(game_params.shop.water_purchase_duration if is_water else game_params.shop.ice_cream_purchase_duration)
+	water_progress_bar.max_value = duration
+	if not shop_purchase_available:
 		water_progress_bar.value = water_progress_bar.max_value
-		shop_prompt.text = "Water collected — step away to buy again"
+		shop_prompt.text = "%s collected — step away to buy again" % item_name
 		return
 	if coins < price:
-		water_purchase_progress = 0.0
+		shop_purchase_progress = 0.0
 		water_progress_bar.value = 0.0
 		shop_prompt.text = "Not enough coins"
 		return
-	var duration := float(game_params.shop.water_purchase_duration)
-	water_purchase_progress += delta
-	water_progress_bar.value = water_purchase_progress
-	var remaining := maxf(duration - water_purchase_progress, 0.0)
-	shop_prompt.text = "Getting water… %.1fs  •  %d coin%s" % [remaining, price, "" if price == 1 else "s"]
-	if water_purchase_progress >= duration:
+	shop_purchase_progress += delta
+	water_progress_bar.value = shop_purchase_progress
+	var remaining := maxf(duration - shop_purchase_progress, 0.0)
+	shop_prompt.text = "Getting %s… %.1fs  •  %d coin%s" % [item_name.to_lower(), remaining, price, "" if price == 1 else "s"]
+	if shop_purchase_progress >= duration:
 		coins -= price
-		player.restore_energy(float(game_params.shop.water_energy_restore))
-		water_purchase_progress = 0.0
-		water_purchase_available = false
-		shop_prompt.text = "Water collected — energy restored!"
-		status_label.text = "Water purchased — energy restored!"
+		if is_water:
+			player.restore_energy(float(game_params.shop.water_energy_restore))
+			status_label.text = "Water purchased — energy restored!"
+		else:
+			sanity = minf(sanity + float(game_params.shop.ice_cream_sanity_restore), sanity_maximum)
+			_update_sanity_ui()
+			status_label.text = "Ice cream purchased — sanity restored!"
+		shop_purchase_progress = 0.0
+		shop_purchase_available = false
+		shop_prompt.text = "%s collected!" % item_name
 		_update_energy_ui()
 
 func _check_map_pickup() -> void:
@@ -643,54 +705,10 @@ func _on_photographed() -> void:
 	if game_over or player.invulnerable:
 		return
 	exposures += 1
+	sanity = maxf(sanity - sanity_photo_loss, sanity_minimum)
 	player.hit()
 	flash_overlay.color = Color(1, 0.25, 0.2, 0.35)
-	_update_exposure_text()
-	if maximum_exposures >= 0 and exposures >= maximum_exposures:
-		game_over = true
-		player.set_physics_process(false)
-		_show_failed_page()
-
-func _show_failed_page() -> void:
-	var page := ColorRect.new()
-	page.name = "FailurePage"
-	page.color = Color("#21151b")
-	page.size = view_size
-	ui_layer.add_child(page)
-
-	var heading := Label.new()
-	heading.name = "FailureHeading"
-	heading.text = "YOU FAILED"
-	heading.position = Vector2(0, 65)
-	heading.size = Vector2(view_size.x, 55)
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.add_theme_font_size_override("font_size", 42)
-	heading.add_theme_color_override("font_color", Color("#ff6b6b"))
-	page.add_child(heading)
-
-	var summary := Label.new()
-	summary.text = "Art visited: %d / %d\nCamera exposures: %d / %d" % [_visited_count(), attractions.size(), exposures, maximum_exposures]
-	summary.position = Vector2(0, 145)
-	summary.size = Vector2(view_size.x, 80)
-	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	summary.add_theme_font_size_override("font_size", 24)
-	page.add_child(summary)
-
-	var reason := Label.new()
-	reason.text = "You were caught in too many photos."
-	reason.position = Vector2(0, 260)
-	reason.size = Vector2(view_size.x, 50)
-	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	reason.add_theme_font_size_override("font_size", 26)
-	page.add_child(reason)
-
-	var restart_hint := Label.new()
-	restart_hint.text = "Press R to try again"
-	restart_hint.position = Vector2(0, 525)
-	restart_hint.size = Vector2(view_size.x, 35)
-	restart_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	restart_hint.add_theme_font_size_override("font_size", 20)
-	page.add_child(restart_hint)
+	_update_sanity_ui()
 
 func _show_celebration_page() -> void:
 	var page := ColorRect.new()
@@ -735,12 +753,14 @@ func _show_celebration_page() -> void:
 	restart_hint.add_theme_font_size_override("font_size", 20)
 	page.add_child(restart_hint)
 
-func _update_exposure_text() -> void:
-	if maximum_exposures < 0:
-		exposure_label.text = "PRIVACY  ∞   EXPOSURES %d" % exposures
+func _update_sanity_ui() -> void:
+	if sanity_label == null or player == null:
 		return
-	var remaining := maximum_exposures - exposures
-	exposure_label.text = "PRIVACY  " + "●".repeat(maxi(remaining, 0)) + "○".repeat(mini(exposures, maximum_exposures))
+	var impaired := sanity < sanity_impaired_threshold
+	player.set_sanity_effect(impaired, sanity_impaired_speed_multiplier, sanity_reverse_controls)
+	sanity_bar.value = maxf(sanity, 0.0)
+	sanity_label.text = "SANITY  %d" % roundi(sanity)
+	sanity_label.add_theme_color_override("font_color", Color("#ff6b6b") if impaired else Color.WHITE)
 
 func _update_art_text() -> void:
 	art_label.text = "ART %d / %d" % [_visited_count(), attractions.size()]

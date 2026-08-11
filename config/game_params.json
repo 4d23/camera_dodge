@@ -11,15 +11,26 @@
 	"energy_maximum": 100.0,
 	"energy_recovery_per_second": 1.0,
 	"dash_energy_cost": 25.0,
-	"maximum_exposures": -1,
 	"debug_show_foot_circle": true
+  },
+  "sanity": {
+	"maximum": 100.0,
+	"minimum": -10.0,
+	"photo_loss": 40.0,
+	"recovery_per_second": 1.0,
+	"impaired_threshold": 0.0,
+	"impaired_speed_multiplier": 0.45,
+	"reverse_controls": true
   },
   "artwork": { "view_duration": 2.0 },
   "shop": {
 	"starting_coins": 3,
 	"water_price": 1,
 	"water_energy_restore": 60.0,
-	"water_purchase_duration": 2.0
+	"water_purchase_duration": 2.0,
+	"ice_cream_price": 1,
+	"ice_cream_sanity_restore": 65.0,
+	"ice_cream_purchase_duration": 2.5
   },
   "crowd": {
 	"tourists_per_100k_pixels": 1.0,

@@ -30,6 +30,9 @@ var dash_direction := Vector2.RIGHT
 var knockback_timer := 0.0
 var knockback_velocity := Vector2.ZERO
 var character_sprite: Sprite2D
+var sanity_impaired := false
+var sanity_speed_multiplier := 1.0
+var sanity_reverse_controls := false
 
 func _ready() -> void:
 	z_as_relative = false
@@ -62,6 +65,8 @@ func _physics_process(delta: float) -> void:
 	)
 	if analog_direction.length() >= controller_deadzone:
 		direction = analog_direction.limit_length(1.0)
+	if sanity_impaired and sanity_reverse_controls:
+		direction = -direction
 	if direction.length_squared() > 0.0:
 		last_move_direction = direction.normalized()
 	var dash_pressed := Input.is_physical_key_pressed(KEY_SPACE) or (InputMap.has_action("dash") and Input.is_action_pressed("dash"))
@@ -78,7 +83,8 @@ func _physics_process(delta: float) -> void:
 		dash_timer -= delta
 		velocity = dash_direction * dash_speed
 	else:
-		var target_velocity := direction * speed
+		var movement_speed := speed * (sanity_speed_multiplier if sanity_impaired else 1.0)
+		var target_velocity := direction * movement_speed
 		var change_rate := acceleration if direction.length_squared() > 0.0 else deceleration
 		velocity = velocity.move_toward(target_velocity, change_rate * delta)
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
@@ -119,6 +125,11 @@ func configure(params: Dictionary) -> void:
 
 func restore_energy(amount: float) -> void:
 	energy = minf(energy + amount, maximum_energy)
+
+func set_sanity_effect(impaired: bool, speed_multiplier: float, reverse_controls: bool) -> void:
+	sanity_impaired = impaired
+	sanity_speed_multiplier = speed_multiplier
+	sanity_reverse_controls = reverse_controls
 
 func _draw() -> void:
 	if debug_show_foot_circle:

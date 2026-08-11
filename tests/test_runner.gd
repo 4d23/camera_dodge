@@ -26,7 +26,7 @@ func _run() -> void:
 	await _test_structures_block_camera_view()
 	await _test_controls()
 	await _test_artwork_and_entry_exit()
-	await _test_failure_page()
+	await _test_sanity_system()
 	if failures == 0:
 		print("PASS: %d assertions" % assertions)
 		quit(0)
@@ -428,21 +428,25 @@ func _test_artwork_and_entry_exit() -> void:
 	game.queue_free()
 	await process_frame
 
-func _test_failure_page() -> void:
-	print("Failure page")
+func _test_sanity_system() -> void:
+	print("Sanity system")
 	var game := MainScene.instantiate()
 	get_root().add_child(game)
 	await process_frame
 	for tourist in game.crowd_nodes:
 		tourist.set_physics_process(false)
+	var initial_sanity: float = game.sanity
 	for exposure in 3:
 		game.player.invulnerable = false
 		game._on_photographed()
-	_expect(game.game_over, "three exposures fail the run")
-	var failure_page: Node = game.ui_layer.get_node_or_null("FailurePage")
-	_expect(failure_page != null, "failure opens the full-screen failed page")
-	_expect(failure_page != null and failure_page.get_node("FailureHeading").text == "YOU FAILED", "failed page shows the failure heading")
-	_expect(not game.player.is_physics_processing(), "failure stops player controls")
+	_expect(game.sanity < initial_sanity, "photos reduce sanity")
+	_expect(game.sanity < game.sanity_impaired_threshold, "repeated photos can push sanity below the impairment threshold")
+	game._update_sanity_ui()
+	_expect(game.player.sanity_impaired, "negative sanity impairs the player")
+	_expect(game.player.sanity_reverse_controls, "impaired controls are reversed")
+	var damaged_sanity: float = game.sanity
+	game._process(1.0)
+	_expect(game.sanity > damaged_sanity, "sanity recovers over time")
 	game.queue_free()
 	await process_frame
 

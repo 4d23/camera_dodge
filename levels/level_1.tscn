@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://bev7oa58pawt6" path="res://assets/artworks/coronation_of_napoleon.jpg" id="7"]
 [ext_resource type="Texture2D" uid="uid://8dxp88sy1kuj" path="res://assets/artworks/raft_of_the_medusa.jpg" id="8"]
 [ext_resource type="Script" uid="uid://dhsxyl2l11jdj" path="res://scripts/location_marker.gd" id="9"]
+[ext_resource type="Script" uid="uid://dyolske3vrtes" path="res://scripts/water_shop.gd" id="10_5ot28"]
 [ext_resource type="Texture2D" uid="uid://cwef587ldq0vn" path="res://assets/scene/carpet_cutout.png" id="10_carpet"]
 
 [node name="Level1" type="Node2D" unique_id=959045115]
@@ -166,7 +167,7 @@ polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="LibertyLeadingThePeople" type="Node2D" parent="Artworks" unique_id=2018597690]
-z_index = 1510
+z_index = 1537
 z_as_relative = false
 position = Vector2(161, 1471)
 scale = Vector2(1.2, 1.2)
@@ -201,7 +202,7 @@ polygon = PackedVector2Array(-46, 70, 46, 70, 46, 114, -46, 114)
 uv = PackedVector2Array(97, 512, 960, 512, 960, 925, 97, 925)
 
 [node name="CoronationOfNapoleon" type="Node2D" parent="Artworks" unique_id=672429625]
-z_index = 683
+z_index = 647
 z_as_relative = false
 position = Vector2(2218, 564)
 scale = Vector2(1.5, 1.5)
@@ -219,7 +220,7 @@ polygon = PackedVector2Array(-78.03804, -46.01817, -77.96199, 45.981804, -121.96
 uv = PackedVector2Array(960, 512, 960, 925, 97, 925, 97, 512)
 
 [node name="RaftOfTheMedusa" type="Node2D" parent="Artworks" unique_id=126773212]
-z_index = 1507
+z_index = 1538
 z_as_relative = false
 position = Vector2(2220, 1472)
 scale = Vector2(1.2, 1.2)
@@ -236,8 +237,16 @@ texture = ExtResource("10_carpet")
 polygon = PackedVector2Array(-78.00835, -46.003994, -77.99165, 45.996006, -121.99165, 46.003994, -122.00835, -45.996006)
 uv = PackedVector2Array(960, 512, 960, 925, 97, 925, 97, 512)
 
+[node name="WaterShop" type="StaticBody2D" parent="Artworks/RaftOfTheMedusa" unique_id=2008484854]
+position = Vector2(470, 655)
+script = ExtResource("10_5ot28")
+
 [node name="Markers" type="Node2D" parent="." unique_id=733179891]
 
 [node name="Stairs" type="Node2D" parent="Markers" unique_id=1586228508]
 position = Vector2(866, 1468)
 script = ExtResource("9")
+
+[node name="WaterShop" type="StaticBody2D" parent="." unique_id=808291242]
+position = Vector2(1306, 1162)
+script = ExtResource("10_5ot28")

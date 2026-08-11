@@ -9,7 +9,7 @@ A small Godot 4 top-down survival prototype. Cross a crowded museum from the ent
 3. Move with WASD or the arrow keys.
 4. Press `Space` to dash in your movement direction.
 5. Yellow cones show a camera being aimed. Leave the frame before it flashes red.
-6. Three photo exposures end the run. Reach the exit to finish. Press `R` to restart.
+6. Photos reduce sanity. Negative sanity slows the player and reverses movement controls until sanity recovers. Reach the exit to finish.
 
 Museum artwork textures are stored under `res://assets/artworks`; characters and environment shapes remain procedurally drawn.
 

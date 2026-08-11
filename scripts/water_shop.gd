@@ -24,12 +24,18 @@ func world_rect() -> Rect2:
 	return Rect2(global_position + COLLISION_OFFSET - COLLISION_SIZE * 0.5, COLLISION_SIZE)
 
 func _draw() -> void:
-	# A compact museum refreshment cart.
-	draw_rect(Rect2(-48, -42, 96, 70), Color("#236b78"), true)
-	draw_rect(Rect2(-52, -48, 104, 12), Color("#d9f2f2"), true)
+	# Blue canopy, stocked display, serving counter, and cart wheels.
+	draw_rect(Rect2(-54, -55, 108, 14), Color("#e6fbff"), true)
+	for stripe_x in range(-54, 54, 27):
+		draw_rect(Rect2(stripe_x, -55, 13.5, 14), Color("#42b8d4"), true)
+	draw_rect(Rect2(-48, -41, 96, 69), Color("#236b78"), true)
+	draw_rect(Rect2(-52, -45, 104, 10), Color("#d9f2f2"), true)
 	draw_rect(Rect2(-42, -31, 84, 38), Color("#174c57"), true)
 	draw_string(ThemeDB.fallback_font, Vector2(-38, -14), "WATER", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
+	for bottle_x in [-24.0, 0.0, 24.0]:
+		draw_rect(Rect2(bottle_x - 4, -39, 8, 19), Color("#64d8ff"), true)
+		draw_rect(Rect2(bottle_x - 3, -43, 6, 5), Color.WHITE, true)
 	draw_circle(Vector2(-31, 31), 9.0, Color("#263238"))
 	draw_circle(Vector2(31, 31), 9.0, Color("#263238"))
-	draw_rect(Rect2(-7, -67, 14, 27), Color("#64d8ff"), true)
-	draw_rect(Rect2(-5, -72, 10, 6), Color.WHITE, true)
+	draw_circle(Vector2(-31, 31), 3.5, Color("#aebbc0"))
+	draw_circle(Vector2(31, 31), 3.5, Color("#aebbc0"))
